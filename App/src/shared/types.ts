@@ -110,7 +110,7 @@ export const DEFAULT_SETTINGS: Settings = {
   preview: false,
   sortKey: 'name',
   sortDir: 1,
-  startup: 'home',
+  startup: 'pc',
   startupPath: '',
   lastTabs: [],
   pinned: [],

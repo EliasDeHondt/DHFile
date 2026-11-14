@@ -64,7 +64,8 @@ export class StateService {
     const s = this.settings();
     if (s.startup === 'pc') return PC;
     if (s.startup === 'custom' && s.startupPath) return s.startupPath;
-    return this.info()?.home ?? PC;
+    if (s.startup === 'home' && this.info()?.home) return this.info()!.home;
+    return PC;
   }
 
   private listen() {
