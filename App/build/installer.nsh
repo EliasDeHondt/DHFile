@@ -22,7 +22,6 @@
 
 !macro customUnInstall
   ${ifNot} ${isUpdated}
-    ; Give folders, drives and Win + E back to Windows Explorer when DHFile was the default.
     ReadRegStr $0 HKCU "Software\Classes\Directory\shell" ""
     StrCmp $0 "DHFile" 0 +2
       DeleteRegValue HKCU "Software\Classes\Directory\shell" ""

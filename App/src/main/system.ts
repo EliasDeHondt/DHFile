@@ -31,7 +31,6 @@ function loadDriveMeta(): Promise<void> {
     for (const line of r.out.split(/\r?\n/)) {
       const [id, type, provider, ...label] = line.trim().split('|');
       if (!/^[A-Z]:$/i.test(id ?? '')) continue;
-      // "\\server\share\dir" -> "dir (\\server)", the way Explorer names a mapped drive.
       const share = (provider ?? '').match(/^\\\\([^\\]+)\\(.+)$/);
       const name = label.join('|').trim() || (share ? `${share[2].split('\\').pop()} (\\\\${share[1]})` : '');
       next[id.toUpperCase()] = { type: TYPES[Number(type)] ?? 'unknown', label: name };
@@ -50,7 +49,6 @@ export async function drives(refreshMeta = false): Promise<Drive[]> {
     const meta = driveMeta[letter];
     const path = letter + '\\';
     let total = 0, free = 0;
-    // Network drives can hang when the server is gone: their size comes later, from the async call below.
     if (meta?.type !== 'network') {
       try { const s = statfsSync(path); total = s.blocks * s.bsize; free = s.bavail * s.bsize; }
       catch { if (!meta) continue; }
@@ -63,7 +61,6 @@ export async function drives(refreshMeta = false): Promise<Drive[]> {
   return out;
 }
 
-/** The "network locations" Explorer shows under This PC: folders with a target.lnk in Network Shortcuts. */
 export function networkLocations(): { name: string; path: string }[] {
   const dir = join(process.env['APPDATA'] ?? '', 'Microsoft', 'Windows', 'Network Shortcuts');
   const out: { name: string; path: string }[] = [];
@@ -110,20 +107,17 @@ export const openWith = (path: string) => detached('rundll32.exe', ['shell32.dll
 export const showInExplorer = (path: string, select: boolean) => select ? shell.showItemInFolder(path) : detached('explorer.exe', [path]);
 export const openRecycleBin = () => detached('explorer.exe', ['shell:RecycleBinFolder']);
 
-/** Puts the files on the Windows clipboard too, so Explorer and other apps can paste them. */
 export function writeFilesToClipboard(paths: string[]) {
   if (process.platform !== 'win32' || !paths.length) return;
   ps('Set-Clipboard -LiteralPath ' + paths.map(psQuote).join(','), 6000).catch(() => {});
 }
 
-/** Files copied in Explorer (or any app) show up as a file drop list. */
 export async function readFilesFromClipboard(): Promise<string[]> {
   if (process.platform !== 'win32') return [];
   const r = await ps('Get-Clipboard -Format FileDropList | ForEach-Object { $_.FullName }', 6000);
   return r.out.split(String.fromCharCode(10)).map(s => s.trim()).filter(Boolean);
 }
 
-/** Optional: DHFile opens folders, drives and Win+E instead of Explorer. Everything lives in HKCU and is fully undone when switched off. */
 const KEY_DIR = 'HKCU\\Software\\Classes\\Directory\\shell';
 const KEY_DRIVE = 'HKCU\\Software\\Classes\\Drive\\shell';
 const KEY_WINE = 'HKCU\\Software\\Classes\\CLSID\\{52205fd8-5dfb-447d-801a-d0b52f2e83e1}';

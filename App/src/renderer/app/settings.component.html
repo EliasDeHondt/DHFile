@@ -65,6 +65,13 @@
           <input type="checkbox" class="switch" [checked]="s().showExtensions" (change)="set('showExtensions', $any($event.target).checked)">
         </label>
         <label class="row">
+          <span class="row-text"><span class="row-title">{{ 'view.fileIcons' | t }}</span><span class="row-sub">{{ 'view.fileIconsSub' | t }}</span></span>
+          <select class="select" (change)="set('fileIcons', $any($event.target).value)">
+            <option value="windows" [selected]="s().fileIcons === 'windows'">{{ 'view.fileIconsWindows' | t }}</option>
+            <option value="dhfile" [selected]="s().fileIcons === 'dhfile'">{{ 'view.fileIconsOwn' | t }}</option>
+          </select>
+        </label>
+        <label class="row">
           <span class="row-text"><span class="row-title">{{ 'view.folderPeek' | t }}</span><span class="row-sub">{{ 'view.folderPeekSub' | t }}</span></span>
           <input type="checkbox" class="switch" [checked]="s().folderPeek" (change)="set('folderPeek', $any($event.target).checked)">
         </label>

@@ -4,6 +4,7 @@ export type ViewMode = 'details' | 'grid';
 export type IconSize = 'small' | 'medium' | 'large';
 export type SortKey = 'name' | 'mtime' | 'type' | 'size';
 export type Startup = 'home' | 'pc' | 'last' | 'custom';
+export type FileIcons = 'windows' | 'dhfile';
 export type SideSection = 'pinned' | 'folders' | 'devices';
 export const SIDE_SECTIONS: SideSection[] = ['pinned', 'folders', 'devices'];
 
@@ -18,7 +19,6 @@ export interface Entry {
   hidden: boolean;
   link: boolean;
   readonly: boolean;
-  /** Only filled in for search results: the folder the entry lives in. */
   parent?: string;
 }
 
@@ -48,12 +48,10 @@ export interface Settings {
   pinned: string[];
   pinsSeeded: boolean;
   sidebarWidth: number;
-  /** Sidebar sections the user hid with a right-click on their heading. */
   hiddenSections: SideSection[];
-  /** Drives and network locations under "This PC" in the sidebar are folded away. */
   drivesCollapsed: boolean;
-  /** Folder icons show a peek of the files inside, like Explorer. */
   folderPeek: boolean;
+  fileIcons: FileIcons;
   defaultFolderApp: boolean;
   autoLockMinutes: number;
 }
@@ -121,6 +119,7 @@ export const DEFAULT_SETTINGS: Settings = {
   hiddenSections: [],
   drivesCollapsed: false,
   folderPeek: true,
+  fileIcons: 'windows',
   defaultFolderApp: false,
   autoLockMinutes: 30,
 };

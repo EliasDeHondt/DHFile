@@ -26,7 +26,6 @@ export class AppComponent {
   dropIndex = signal<number | null>(null);
   tabMenu = signal<{ x: number; y: number; tab: Tab } | null>(null);
   isFolder = (tab: Tab): tab is FolderTab => tab instanceof FolderTab;
-  /** True while a dialog with a dark backdrop is open. */
   modal = signal(false);
 
   constructor() {

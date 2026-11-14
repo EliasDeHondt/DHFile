@@ -101,7 +101,6 @@ export class ExplorerComponent {
     });
     effect(() => { if (this.tab().renaming()) queueMicrotask(() => this.focusRename()); });
     effect(() => { if (this.active()) queueMicrotask(() => { if (!this.host.nativeElement.contains(document.activeElement) || document.activeElement === document.body) this.focusList(); }); });
-    // The scroll container is re-created when switching between This PC and a folder, so (re)attach every time.
     effect(onCleanup => {
       const vp = this.viewport()?.nativeElement;
       if (!vp) return;
@@ -117,7 +116,6 @@ export class ExplorerComponent {
     destroy.onDestroy(() => window.removeEventListener('mouseup', mouseNav));
   }
 
-  /* ---------- labels ---------- */
 
   name(e: Entry) { return displayName(e, this.s().showExtensions); }
   typeLabel(e: Entry): string {
@@ -142,7 +140,6 @@ export class ExplorerComponent {
   isCurrent(path: string) { return this.tab().path() !== PC && samePath(this.tab().path(), path); }
   thumb(e: Entry, px: number) { return thumbUrl(e, px); }
 
-  /* ---------- navigation ---------- */
 
   go(path: string) { this.menu.set(null); this.tab().go(path); this.focusList(); }
   open(e: Entry, newTab = false) {
@@ -212,7 +209,6 @@ export class ExplorerComponent {
   }
   clearSearch() { clearTimeout(this.searchTimer); this.searchText.set(''); this.tab().clearSearch(); }
 
-  /* ---------- selection ---------- */
 
   focusList() { queueMicrotask(() => this.viewport()?.nativeElement.focus({ preventScroll: true })); }
 
@@ -312,7 +308,6 @@ export class ExplorerComponent {
     this.tab().selected.set(next);
   }
 
-  /* ---------- keyboard ---------- */
 
   onKey(ev: KeyboardEvent) {
     if (!this.active() || ev.defaultPrevented) return;
@@ -371,7 +366,6 @@ export class ExplorerComponent {
     }
   }
 
-  /* ---------- file operations ---------- */
 
   get dir() { return this.tab().path(); }
   canWrite = computed(() => this.tab().path() !== PC && !this.searching());
@@ -458,7 +452,6 @@ export class ExplorerComponent {
     await this.transfer(clip.paths, dest, clip.mode, clip);
   }
 
-  /** Copy or move with Explorer's conflict question. */
   async transfer(sources: string[], dest: string, mode: 'copy' | 'move', clip?: Clip) {
     if (sources.some(src => isInside(dest, src) && !samePath(parentOf(src) ?? '', dest))) { this.state.toast(t('err.inside'), 'error'); return; }
     let conflict: Conflict = 'ask';
@@ -485,7 +478,6 @@ export class ExplorerComponent {
     } finally { clearTimeout(timer); if (busy) this.state.dismiss(busy); }
   }
 
-  /* ---------- drag and drop ---------- */
 
   dragStart(ev: DragEvent, e: Entry) {
     ev.preventDefault();
@@ -520,7 +512,6 @@ export class ExplorerComponent {
     await this.transfer(sources, dest, mode);
   }
 
-  /* ---------- sorting and view ---------- */
 
   sortBy(key: SortKey) {
     const s = this.s();
@@ -540,7 +531,6 @@ export class ExplorerComponent {
     this.zone.runOutsideAngular(() => { window.addEventListener('mousemove', move); window.addEventListener('mouseup', up); });
   }
 
-  /* ---------- menus ---------- */
 
   newMenu(ev: MouseEvent) { const r = (ev.currentTarget as HTMLElement).getBoundingClientRect(); this.menu.set({ x: r.left, y: r.bottom + 4, items: this.newItems() }); }
   private newItems(): MenuItem[] { return [{ label: t('ops.newFolder'), icon: 'newFolder', run: () => this.newFolder(), disabled: !this.canWrite() }, { label: t('ops.newFile'), icon: 'newFile', run: () => this.newTextFile(), disabled: !this.canWrite() }]; }
@@ -664,7 +654,6 @@ export class ExplorerComponent {
     ev.dataTransfer.dropEffect = 'link';
     this.dropTarget.set('pin:');
   }
-  /** Dropping folders on the "Pinned" heading pins them. */
   async dropPin(ev: DragEvent) {
     this.dropTarget.set(null);
     if (!ev.dataTransfer?.files.length) return;
@@ -674,7 +663,6 @@ export class ExplorerComponent {
       if (r?.dir) this.state.pin(r.path);
     }
   }
-  /* ---------- sidebar sections ---------- */
 
   showSection(id: SideSection) { return !this.s().hiddenSections.includes(id); }
   private sectionLabel(id: SideSection) { return t(('side.' + id) as TextKey); }
@@ -682,7 +670,6 @@ export class ExplorerComponent {
     const hidden = this.s().hiddenSections.filter(x => x !== id);
     this.state.saveSettings({ hiddenSections: show ? hidden : [...hidden, id] });
   }
-  /** Right-click on a sidebar heading (or empty sidebar space): hide that part, or bring hidden parts back. */
   sideContext(ev: MouseEvent, id: SideSection | null) {
     if (ev.defaultPrevented) return;
     ev.preventDefault();
@@ -712,7 +699,6 @@ export class ExplorerComponent {
 
   placeMouse(ev: MouseEvent, path: string) { if (ev.button === 1) { ev.preventDefault(); this.state.newTab(path, false); } }
 
-  /* ---------- properties ---------- */
 
   async showProperties(path?: string) {
     const entry = path ? null : this.single();

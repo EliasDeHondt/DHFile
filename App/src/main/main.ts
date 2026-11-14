@@ -7,7 +7,8 @@ import { changePin, idleFor, isUnlocked, lockApp, lockStatus, markActivity, setu
 import { getSettings, saveSettings, settingsPath, watchSettings } from './settings';
 import * as fsx from './fsops';
 import * as sys from './system';
-import { normalizePath } from '../shared/files';
+import { shellIcon, stopIcons, warmIcons } from './native-icons';
+import { extOf, normalizePath } from '../shared/files';
 import { AppInfo, Settings, TransferRequest } from '../shared/types';
 
 protocol.registerSchemesAsPrivileged([{ scheme: 'dhfile', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, stream: true } }]);
@@ -38,7 +39,6 @@ function parseArgs(argv: string[], workingDirectory: string): string | null {
 
 const isDark = (s: Settings) => s.theme === 'dark' || (s.theme === 'system' && nativeTheme.shouldUseDarkColors);
 const dim = (hex: string) => { const n = parseInt(hex.slice(1, 7), 16); return '#' + [n >> 16, (n >> 8) & 255, n & 255].map(v => Math.round(v * 0.55).toString(16).padStart(2, '0')).join(''); };
-/** While a dialog is open the native buttons get the same dark veil as the page and stop working, like in DHMail. */
 const chrome = (dark: boolean, mica: boolean, modal = false) => {
   const color = dark ? '#060709' : '#eef1f5', symbol = dark ? '#edeff2' : '#0c0e11';
   return { color: modal ? (mica ? '#00000073' : dim(color)) : mica ? '#00000000' : color, symbolColor: modal ? dim(symbol) : symbol, height: 40 };
@@ -72,26 +72,47 @@ function createWindow(path: string | null) {
 const thumbs = new Map<string, Buffer>();
 const png = (buf: Buffer) => new Response(new Uint8Array(buf), { headers: { 'content-type': 'image/png', 'cache-control': 'max-age=3600' } });
 const notFound = () => new Response(null, { status: 404 });
+const genericExts = new Set<string>();
+function remember(key: string, buf: Buffer) {
+  thumbs.set(key, buf);
+  if (thumbs.size > 1500) thumbs.delete(thumbs.keys().next().value!);
+  return buf;
+}
 
 function serve() {
   protocol.handle('dhfile', async request => {
     const url = new URL(request.url);
-    if (url.host === 'thumb' || url.host === 'icon') {
+    if (url.host === 'thumb') {
       if (!isUnlocked()) return notFound();
       const path = url.searchParams.get('p') ?? '';
       const size = Math.min(512, Math.max(16, Number(url.searchParams.get('s')) || 96));
-      const key = `${url.host}|${size}|${url.searchParams.get('m') ?? ''}|${path}`;
+      const key = `thumb|${size}|${url.searchParams.get('m') ?? ''}|${path}`;
       const hit = thumbs.get(key);
       if (hit) return png(hit);
       try {
-        const img = url.host === 'thumb'
-          ? await nativeImage.createThumbnailFromPath(path, { width: size, height: size })
-          : await app.getFileIcon(path, { size: size > 24 ? 'large' : 'small' });
+        const img = await nativeImage.createThumbnailFromPath(path, { width: size, height: size });
         if (img.isEmpty()) return notFound();
-        const buf = img.toPNG();
-        thumbs.set(key, buf);
-        if (thumbs.size > 600) thumbs.delete(thumbs.keys().next().value!);
-        return png(buf);
+        return png(remember(key, img.toPNG()));
+      } catch { return notFound(); }
+    }
+    if (url.host === 'icon') {
+      if (!isUnlocked()) return notFound();
+      const path = url.searchParams.get('p') ?? '';
+      const size = Math.min(256, Math.max(16, Number(url.searchParams.get('s')) || 32));
+      const byExt = url.searchParams.get('e') === '1';
+      const ext = extOf(path);
+      if (byExt && (!ext || genericExts.has(ext))) return notFound();
+      const key = byExt ? `ext|${size}|${ext}` : `icon|${size}|${path}`;
+      const hit = thumbs.get(key);
+      if (hit) return png(hit);
+      const fromShell = await shellIcon(path, size, byExt);
+      if (fromShell === 'generic') { genericExts.add(ext); return notFound(); }
+      if (fromShell?.length) return png(remember(key, fromShell));
+      if (byExt) return notFound();
+      try {
+        const img = await app.getFileIcon(path, { size: size > 24 ? 'large' : 'small' });
+        if (img.isEmpty()) return notFound();
+        return png(remember(key, img.toPNG()));
       } catch { return notFound(); }
     }
     let pathname = decodeURIComponent(url.pathname);
@@ -243,6 +264,8 @@ else {
     nativeTheme.on('updated', () => broadcast('theme:system', nativeTheme.shouldUseDarkColors));
     sys.drives().catch(() => {});
     createWindow(parseArgs(process.argv, process.cwd()));
+    setTimeout(warmIcons, 800);
   });
   app.on('window-all-closed', () => app.quit());
+  app.on('will-quit', () => stopIcons());
 }

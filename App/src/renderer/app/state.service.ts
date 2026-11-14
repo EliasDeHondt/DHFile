@@ -42,14 +42,12 @@ export class StateService {
     this.info.set(info);
     this.settings.set(settings);
     if (!settings.pinsSeeded) {
-      // First run: Downloads and Documents are pinned; the rest is up to you.
       const wanted = ['downloads', 'documents'].map(id => info.places.find(p => p.id === id)?.path).filter((p): p is string => !!p);
       await this.saveSettings({ pinned: [...wanted, ...settings.pinned.filter(p => !wanted.some(w => samePath(w, p)))], pinsSeeded: true });
     }
     this.loaded.set(true);
   }
 
-  /** Runs once the PIN lock is open. */
   openFirstTabs() {
     if (this.firstOpened || !this.loaded()) return;
     this.firstOpened = true;
@@ -60,7 +58,6 @@ export class StateService {
     this.newTab(this.startPath());
   }
 
-  /** After unlocking again: reload what is on screen (watchers were dropped while locked). */
   reloadAll() { for (const tab of this.tabs()) if (tab instanceof FolderTab) tab.load(); this.refreshDrives(); }
 
   startPath(): string {
@@ -91,7 +88,6 @@ export class StateService {
   }
   toggleTheme() { this.saveSettings({ theme: this.dark() ? 'light' : 'dark' }); }
 
-  /* ---------- tabs ---------- */
 
   newTab(path: string = this.startPath(), activate = true): FolderTab {
     const tab = new FolderTab(this.nextTab++, () => this.rememberTabs());
@@ -101,7 +97,6 @@ export class StateService {
     return tab;
   }
 
-  /** Opens a folder in the current tab, or a file's folder with the file selected. */
   async openPath(path: string) {
     const r = path === PC ? { path: PC, dir: true } : await bridge.resolve(path);
     if (!r) { this.toast(t('err.notFound', { path }), 'error'); if (!this.tabs().length) this.newTab(this.startPath()); return; }
@@ -160,7 +155,6 @@ export class StateService {
     }, 1200);
   }
 
-  /* ---------- places ---------- */
 
   specialOf(path: string): string | undefined {
     const p = this.places().find(x => samePath(x.path, path));
@@ -181,7 +175,6 @@ export class StateService {
   }
   unpin(path: string) { this.saveSettings({ pinned: this.settings().pinned.filter(p => !samePath(p, path)) }); }
 
-  /* ---------- clipboard ---------- */
 
   setClip(paths: string[], mode: 'copy' | 'move') {
     if (!paths.length) return;
@@ -189,7 +182,6 @@ export class StateService {
     bridge.writeClipboardFiles(paths);
   }
   isCut(path: string) { const c = this.clip(); return c?.mode === 'move' && c.paths.includes(path); }
-  /** Our own clipboard wins when Windows still holds the same files, otherwise use what Explorer (or another app) copied. */
   async readClip(): Promise<Clip | null> {
     const own = this.clip();
     const files = await bridge.readClipboardFiles();
@@ -200,7 +192,6 @@ export class StateService {
   clipDone(clip: Clip) { if (clip.mode === 'move' && this.clip() === clip) this.clip.set(null); }
   touches(path: string, clip: Clip | null) { return !!clip && clip.paths.some(p => isInside(path, p)); }
 
-  /* ---------- toasts ---------- */
 
   toast(text: string, kind: Toast['kind'] = 'info', ms = 3500): number {
     const id = this.nextToast++;

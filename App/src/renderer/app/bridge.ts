@@ -66,4 +66,12 @@ export const bridge = {
 };
 
 export const thumbUrl = (e: Entry, size: number) => `dhfile://thumb/?p=${encodeURIComponent(e.path)}&s=${size}&m=${Math.round(e.mtime)}`;
-export const nativeIconUrl = (path: string, size: number) => `dhfile://icon/?p=${encodeURIComponent(path)}&s=${size}`;
+const ICON_SIZES = [16, 24, 32, 48, 64, 96, 128, 256];
+export const iconSize = (px: number) => { const want = px * (window.devicePixelRatio || 1); return ICON_SIZES.find(b => b >= want) ?? 256; };
+export const nativeIconUrl = (path: string, px: number) => `dhfile://icon/?p=${encodeURIComponent(path)}&s=${iconSize(px)}`;
+const typeSamples = new Map<string, string>();
+export function typeIconUrl(path: string, ext: string, px: number) {
+  let sample = typeSamples.get(ext);
+  if (!sample) { sample = path; typeSamples.set(ext, sample); }
+  return `dhfile://icon/?e=1&p=${encodeURIComponent(sample)}&s=${iconSize(px)}`;
+}

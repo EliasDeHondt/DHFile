@@ -1,7 +1,6 @@
 :host { display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; background: var(--page); color: var(--text); --cols: minmax(220px, 1fr) 156px 168px 96px; }
 :host .main--search { --cols: minmax(160px, 1fr) minmax(110px, 0.8fr) 140px 130px 80px; }
 
-/* ---------- toolbar ---------- */
 .toolbar { display: flex; align-items: center; gap: 8px; flex: none; height: 48px; padding: 0 10px; }
 .nav-btns { display: flex; gap: 2px; flex: none; }
 .tool { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; padding: 0; border: none; border-radius: 8px; background: none; color: var(--text); transition: background 0.12s, color 0.12s, opacity 0.12s; }
@@ -36,7 +35,6 @@
 .search-clear:hover { background: var(--hover); color: var(--text); }
 .search-clear .ui-icon { --icon-size: 12px; }
 
-/* ---------- command bar ---------- */
 .cmdbar { display: flex; align-items: center; gap: 2px; flex: none; height: 44px; padding: 0 10px 4px; border-bottom: 1px solid var(--line-soft); overflow: hidden; }
 .cmd { display: inline-flex; align-items: center; justify-content: center; gap: 7px; flex: none; min-width: 36px; height: 34px; padding: 0 9px; border: none; border-radius: 8px; background: none; color: var(--text); font-size: 13px; white-space: nowrap; transition: background 0.12s, opacity 0.12s; }
 .cmd .ui-icon { --icon-size: 18px; color: var(--accent-ink); }
@@ -50,7 +48,6 @@
 .cmd-fill { flex: 1; }
 @media (max-width: 860px) { .cmd-text { display: none; } }
 
-/* ---------- body ---------- */
 .body { display: flex; flex: 1; min-height: 0; }
 .body--resizing, .body--resizing * { cursor: var(--cursor-ew) !important; user-select: none; }
 .sidebar { display: flex; flex-direction: column; gap: 1px; flex: none; width: var(--sidebar, 236px); padding: 10px 8px 16px; overflow-y: auto; overflow-x: hidden; }
@@ -128,7 +125,6 @@
 .state-title { margin: 0; font-size: 15px; font-weight: 600; }
 .state-sub { margin: 0; max-width: 520px; color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
 
-/* ---------- This PC ---------- */
 .pc { flex: 1; min-height: 0; padding: 18px 26px 30px; overflow-y: auto; outline: none; }
 .pc-title { margin: 6px 0 12px; color: var(--title); font-size: 12px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; }
 .pc-title:not(:first-child) { margin-top: 26px; }
@@ -144,7 +140,6 @@
 .pc-bar--full span { background: var(--danger); }
 .pc-free { color: var(--muted); font-size: 12px; }
 
-/* ---------- preview ---------- */
 .preview { display: flex; flex-direction: column; gap: 12px; flex: none; width: 300px; padding: 16px; border-left: 1px solid var(--line-soft); overflow-y: auto; }
 .preview-visual { display: flex; align-items: center; justify-content: center; min-height: 180px; max-height: 50%; border-radius: 10px; background: color-mix(in srgb, var(--surface) 70%, transparent); overflow: hidden; }
 .preview-thumb { --icon-size: 240px; }
@@ -158,7 +153,6 @@
 .preview-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; flex: 1; color: var(--muted); text-align: center; font-size: 13px; }
 .preview-empty .ui-icon { --icon-size: 30px; }
 
-/* ---------- status bar ---------- */
 .status { display: flex; align-items: center; gap: 10px; flex: none; height: 30px; padding: 0 8px 0 16px; border-top: 1px solid var(--line-soft); color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 .status-sep { width: 1px; height: 14px; background: var(--line); }
 .status-clip { display: inline-flex; align-items: center; gap: 6px; }
@@ -169,7 +163,6 @@
 .status-btn:hover { background: var(--hover); color: var(--text); }
 .status-btn--on { background: var(--tint); color: var(--accent-ink); }
 
-/* ---------- menus and dialogs ---------- */
 .ctx { max-height: calc(100vh - 16px); overflow-y: auto; }
 .menu-item { grid-template-columns: 20px 1fr auto; }
 .menu-item--danger .menu-icon { color: var(--danger); }

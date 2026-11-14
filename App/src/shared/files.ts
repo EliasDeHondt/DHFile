@@ -5,35 +5,56 @@ export const PC = 'pc:';
 const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
 export const naturalCompare = (a: string, b: string) => collator.compare(a, b);
 
-/** File categories drive both the icon and the "Type" column. */
-export type FileKind = 'folder' | 'image' | 'video' | 'audio' | 'archive' | 'code' | 'text' | 'pdf' | 'word' | 'excel' | 'powerpoint' | 'exe' | 'shortcut' | 'font' | 'disk' | 'data' | 'file';
+export type FileKind = 'folder' | 'image' | 'vector' | 'design' | 'video' | 'audio' | 'archive' | 'code' | 'web' | 'script' | 'config' | 'text' | 'table'
+  | 'pdf' | 'word' | 'excel' | 'powerpoint' | 'exe' | 'installer' | 'shortcut' | 'font' | 'disk' | 'database' | 'system' | 'email' | 'calendar'
+  | 'contact' | 'ebook' | 'key' | 'model' | 'subtitle' | 'torrent' | 'backup' | 'data' | 'file';
 
 const KINDS: Record<string, FileKind> = {};
 const add = (kind: FileKind, exts: string) => { for (const e of exts.split(' ')) KINDS[e] = kind; };
-add('image', 'png jpg jpeg gif bmp webp tif tiff ico svg heic heif avif raw cr2 nef psd jfif');
-add('video', 'mp4 mkv avi mov wmv webm flv m4v mpg mpeg 3gp ts');
-add('audio', 'mp3 wav flac aac ogg m4a wma opus mid midi');
-add('archive', 'zip rar 7z tar gz tgz bz2 xz zst cab lz');
-add('code', 'js mjs cjs ts tsx jsx json jsonc html htm css scss less py java c h cpp hpp cs go rs rb php sh ps1 psm1 bat cmd kt swift sql xml yml yaml toml vue svelte dart lua r m ipynb gradle');
-add('text', 'txt md log ini cfg conf csv tsv rtf nfo env gitignore editorconfig');
-add('pdf', 'pdf');
-add('word', 'doc docx odt dotx');
-add('excel', 'xls xlsx xlsm ods xltx');
-add('powerpoint', 'ppt pptx odp potx');
-add('exe', 'exe msi com scr appx msix appinstaller');
-add('shortcut', 'lnk url appref-ms');
-add('font', 'ttf otf woff woff2 fon');
-add('disk', 'iso img vhd vhdx vmdk');
-add('data', 'db sqlite dll sys dat bin bak tmp');
+add('image', 'png jpg jpeg jpe jfif gif bmp dib webp tif tiff ico cur heic heif avif jxl raw cr2 cr3 nef nrw arw dng orf rw2 raf srw pef tga dds exr hdr pcx ppm pgm pbm');
+add('vector', 'svg svgz eps emf wmf');
+add('design', 'psd psb ai xd fig sketch indd idml afdesign afphoto afpub kra xcf cdr clip procreate ora');
+add('video', 'mp4 mkv avi mov wmv webm flv f4v m4v mpg mpeg mpe m2v 3gp 3g2 ts mts m2ts vob ogv rm rmvb asf divx');
+add('audio', 'mp3 wav flac aac ogg oga m4a m4b wma opus mid midi aif aiff aifc alac ape amr wv mka ac3 dts caf');
+add('archive', 'zip zipx rar 7z tar gz tgz bz2 tbz tbz2 xz txz zst lz lzma lz4 cab arj z jar war ear');
+add('code', 'js mjs cjs ts cts tsx jsx json jsonc json5 py pyw pyi java class c h cpp cxx cc hpp hxx hh cs csx go rs rb php kt kts swift dart lua r m mm scala sc clj cljs ex exs erl hrl hs elm fs fsx vb pl pm asm s wasm wat d nim zig groovy ipynb gradle sql xml xsd xsl xslt xaml csproj vbproj sln vcxproj props targets vue svelte astro graphql gql proto cmake mk makefile dockerfile tf hcl sol');
+add('web', 'html htm xhtml shtml mhtml mht css scss sass less styl');
+add('script', 'bat cmd ps1 psm1 psd1 sh bash zsh fish ksh vbs vbe wsf ahk au3 applescript');
+add('config', 'ini cfg conf config env toml yml yaml properties reg editorconfig gitignore gitattributes gitmodules npmrc nvmrc prettierrc eslintrc babelrc lock plist inf manifest desktop service');
+add('text', 'txt text md markdown mdx log rtf nfo diz readme me rst adoc tex');
+add('table', 'csv tsv tab');
+add('pdf', 'pdf xps oxps');
+add('word', 'doc docx docm dot dotx dotm odt ott pages wpd wps');
+add('excel', 'xls xlsx xlsm xlsb xlt xltx xltm ods ots numbers');
+add('powerpoint', 'ppt pptx pptm pot potx potm pps ppsx odp otp');
+add('exe', 'exe com scr cpl msc gadget');
+add('installer', 'msi msp msix msixbundle appx appxbundle appinstaller apk aab xapk deb rpm pkg snap flatpak');
+add('shortcut', 'lnk url appref-ms website webloc');
+add('font', 'ttf otf ttc woff woff2 fon fnt eot pfb pfm');
+add('disk', 'iso img vhd vhdx vmdk vdi qcow2 dmg wim esd swm');
+add('database', 'db db3 sqlite sqlite3 mdb accdb sdf mdf ldf ndf dbf frm ibd realm kdb');
+add('system', 'dll sys drv ocx mui efi msstyles theme deskthemepack cat');
+add('email', 'eml emlx msg mbox oft pst ost');
+add('calendar', 'ics ical icalendar vcs');
+add('contact', 'vcf vcard contact');
+add('ebook', 'epub mobi azw azw3 kfx fb2 djvu cbz cbr cb7');
+add('key', 'pem crt cer der key pfx p12 p7b p7c csr pub asc gpg pgp sig ppk jks keystore kdbx');
+add('model', 'obj stl fbx blend gltf glb 3mf step stp iges igs dae 3ds max ma mb ply usd usda usdz skp dwg dxf f3d sldprt sldasm ipt iam');
+add('subtitle', 'srt vtt ass ssa sub sbv idx');
+add('torrent', 'torrent magnet');
+add('backup', 'bak old orig tmp temp swp swo part crdownload partial download');
+add('data', 'dat bin hex dmp pak sav nbt bson parquet avro pickle pkl npy npz h5 hdf5 mat');
 
 export function kindOf(entry: Pick<Entry, 'dir' | 'ext'>): FileKind {
   if (entry.dir) return 'folder';
   return KINDS[entry.ext.toLowerCase()] ?? 'file';
 }
 
-/** Extensions whose real Windows icon (the app's own icon) beats a generic one. */
-const NATIVE = new Set(['exe', 'lnk', 'ico', 'msi', 'url', 'appref-ms', 'scr', 'cpl', 'msc']);
+const NATIVE = new Set(['exe', 'lnk', 'ico', 'cur', 'msi', 'url', 'appref-ms', 'website', 'scr', 'cpl', 'msc', 'com']);
 export const wantsNativeIcon = (entry: Pick<Entry, 'dir' | 'ext'>) => !entry.dir && NATIVE.has(entry.ext.toLowerCase());
+
+const SHORTCUTS = new Set(['lnk', 'url', 'appref-ms', 'website']);
+export const isShortcut = (entry: Pick<Entry, 'dir' | 'ext'>) => !entry.dir && SHORTCUTS.has(entry.ext.toLowerCase());
 
 const THUMBS = new Set(['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'tif', 'tiff', 'heic', 'heif', 'avif', 'jfif', 'mp4', 'mkv', 'avi', 'mov', 'wmv', 'webm', 'm4v', 'pdf', 'psd']);
 export const hasThumbnail = (entry: Pick<Entry, 'dir' | 'ext'>) => !entry.dir && THUMBS.has(entry.ext.toLowerCase());
@@ -71,7 +92,6 @@ export function sortEntries(entries: Entry[], key: SortKey, dir: number, folders
   });
 }
 
-/** "New folder", "New folder (2)", ... the way Explorer counts. */
 export function uniqueName(wanted: string, taken: Iterable<string>, opts: { copy?: boolean; dir?: boolean } = {}): string {
   const copy = !!opts.copy;
   const lower = new Set(Array.from(taken, n => n.toLowerCase()));
@@ -88,7 +108,6 @@ export function uniqueName(wanted: string, taken: Iterable<string>, opts: { copy
 }
 
 const RESERVED = /^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\..*)?$/i;
-/** Returns null when Windows accepts the name, otherwise a short reason key. */
 export function invalidName(name: string): 'empty' | 'chars' | 'reserved' | 'dots' | null {
   if (!name.trim()) return 'empty';
   if (/[<>:"/\\|?*\x00-\x1f]/.test(name)) return 'chars';
@@ -127,7 +146,6 @@ export function joinPath(dir: string, name: string): string {
 
 export function samePath(a: string, b: string) { return normalizePath(a).toLowerCase() === normalizePath(b).toLowerCase(); }
 
-/** True when `child` is `parent` itself or somewhere below it. */
 export function isInside(child: string, parent: string): boolean {
   const c = normalizePath(child).toLowerCase(), p = normalizePath(parent).toLowerCase();
   return c === p || c.startsWith(p.endsWith('\\') ? p : p + '\\');
@@ -155,7 +173,6 @@ export function crumbs(p: string): Crumb[] {
   return out;
 }
 
-/** Explorer-style search: plain text matches anywhere, * and ? work as wildcards. */
 export function matcher(query: string): (name: string) => boolean {
   const q = query.trim().toLowerCase();
   if (!q) return () => true;

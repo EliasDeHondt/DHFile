@@ -7,7 +7,6 @@ import { Entry, Listing, OpResult, Preview, Properties, TransferRequest, Transfe
 
 const SYSTEM_NAMES = new Set(['$recycle.bin', 'system volume information', 'pagefile.sys', 'hiberfil.sys', 'swapfile.sys', 'dumpstack.log.tmp', 'dumpstack.log', 'desktop.ini', 'thumbs.db', 'config.msi', '$winreagent', '$windows.~ws', '$windows.~bt', '$sysreset', 'recovery', 'documents and settings', 'ntuser.dat']);
 
-/** `dir /a:h /b` through cmd in Unicode mode gives the names Windows marks as hidden. */
 function hiddenNames(dir: string): Promise<Set<string>> {
   if (process.platform !== 'win32') return Promise.resolve(new Set());
   return new Promise(resolve => {
@@ -24,7 +23,7 @@ async function toEntry(dir: string, d: Dirent | string, hidden: Set<string>): Pr
   try {
     const l = await lstat(path);
     let s = l, link = l.isSymbolicLink();
-    if (link) { try { s = await stat(path); } catch { /* broken link: keep lstat */ } }
+    if (link) { try { s = await stat(path); } catch { } }
     const isDir = s.isDirectory();
     const lower = name.toLowerCase();
     return {
@@ -47,10 +46,6 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promis
   return out;
 }
 
-/**
- * A few files from a folder for the "peek inside" folder icon, pictures first like Explorer.
- * Only the chosen files are stat'ed, so big folders stay cheap.
- */
 export async function peek(path: string, max = 3): Promise<Entry[]> {
   const dir = normalizePath(path);
   try {
@@ -209,7 +204,6 @@ export async function preview(path: string): Promise<Preview> {
 
 export async function readSmall(path: string): Promise<string | null> { try { return await readFile(path, 'utf8'); } catch { return null; } }
 
-/** Recursive name search, streamed back in batches. */
 export async function search(root: string, query: string, emit: (batch: Entry[]) => void, isCancelled: () => boolean, max = 5000) {
   const match = matcher(query);
   let found = 0, batch: Entry[] = [], lastEmit = Date.now();
@@ -234,7 +228,6 @@ export async function search(root: string, query: string, emit: (batch: Entry[])
   flush();
 }
 
-/** One debounced watcher per (window, tab). */
 export class Watchers {
   private map = new Map<string, { w: FSWatcher; t: NodeJS.Timeout | null }>();
   set(key: string, path: string | null, onChange: () => void) {

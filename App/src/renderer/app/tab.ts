@@ -66,7 +66,6 @@ export class FolderTab {
     this.onLoaded(this);
   }
 
-  /** Quiet reload after a change on disk: keeps selection and focus. */
   async refresh() { if (!this.results()) await this.load(); }
 
   setSelection(paths: string[], focus: string | null = paths[paths.length - 1] ?? null) {
