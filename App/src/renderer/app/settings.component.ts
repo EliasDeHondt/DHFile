@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { Settings } from '../../shared/types';
+import { Settings, SIDE_SECTIONS, SideSection } from '../../shared/types';
 import { bridge } from './bridge';
 import { t, TextKey, TPipe } from './i18n';
 import { IconComponent } from './icon.component';
@@ -25,6 +25,8 @@ export class SettingsComponent {
   constructor() { bridge.isDefaultFolderApp().then(v => this.defaultActual.set(v)); }
 
   go(section: string) { this.section.set(section); }
+  sections = SIDE_SECTIONS;
+  toggleSection(id: SideSection, show: boolean) { const rest = this.s().hiddenSections.filter(x => x !== id); this.set('hiddenSections', show ? rest : [...rest, id]); }
   set<K extends keyof Settings>(key: K, value: Settings[K]) { this.state.saveSettings({ [key]: value } as Partial<Settings>); }
   num(key: 'autoLockMinutes', value: string) { const n = Number(value); if (Number.isFinite(n)) this.set(key, n); }
 

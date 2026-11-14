@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, NgZone, computed, effect, inject, input, signal, untracked, viewChild } from '@angular/core';
 import { baseName, crumbs, displayName, formatSize, hasThumbnail, invalidName, isInside, isTextFile, kindOf, naturalCompare, parentOf, PC, samePath, sortEntries, stem } from '../../shared/files';
-import { Conflict, Drive, Entry, Preview, Properties, SortKey } from '../../shared/types';
+import { Conflict, Drive, Entry, Preview, Properties, SIDE_SECTIONS, SideSection, SortKey } from '../../shared/types';
 import { bridge, thumbUrl } from './bridge';
 import { language, t, TextKey, TPipe } from './i18n';
 import { FileIconComponent, IconComponent } from './icon.component';
@@ -674,6 +674,42 @@ export class ExplorerComponent {
       if (r?.dir) this.state.pin(r.path);
     }
   }
+  /* ---------- sidebar sections ---------- */
+
+  showSection(id: SideSection) { return !this.s().hiddenSections.includes(id); }
+  private sectionLabel(id: SideSection) { return t(('side.' + id) as TextKey); }
+  setSection(id: SideSection, show: boolean) {
+    const hidden = this.s().hiddenSections.filter(x => x !== id);
+    this.state.saveSettings({ hiddenSections: show ? hidden : [...hidden, id] });
+  }
+  /** Right-click on a sidebar heading (or empty sidebar space): hide that part, or bring hidden parts back. */
+  sideContext(ev: MouseEvent, id: SideSection | null) {
+    if (ev.defaultPrevented) return;
+    ev.preventDefault();
+    if (!id && (ev.target as HTMLElement).closest('.side-item, .side-twist')) return;
+    const hidden = this.s().hiddenSections;
+    const items: MenuItem[] = [];
+    if (id) items.push({ label: t('side.hide', { name: this.sectionLabel(id) }), icon: 'hidden', run: () => this.setSection(id, false) }, { sep: true });
+    items.push(...SIDE_SECTIONS.map(x => ({ label: this.sectionLabel(x), checked: !hidden.includes(x), run: () => this.setSection(x, hidden.includes(x)) })));
+    if (hidden.length) items.push({ sep: true }, { label: t('side.showAll'), icon: 'eye', run: () => this.state.saveSettings({ hiddenSections: [] }) });
+    this.showMenuAt(ev, items);
+  }
+  toggleDrives() { this.state.saveSettings({ drivesCollapsed: !this.s().drivesCollapsed }); }
+  pcContext(ev: MouseEvent) {
+    ev.preventDefault();
+    const collapsed = this.s().drivesCollapsed;
+    this.showMenuAt(ev, [
+      { label: t('menu.openTab'), icon: 'plus', run: () => this.state.newTab(PC, false) },
+      { label: t('menu.openWindow'), icon: 'window', run: () => bridge.newWindow(PC) },
+      { sep: true },
+      { label: t(collapsed ? 'side.expand' : 'side.collapse'), icon: collapsed ? 'down' : 'up', run: () => this.toggleDrives() },
+    ]);
+  }
+  private showMenuAt(ev: MouseEvent, items: MenuItem[]) {
+    const height = items.reduce((h, i) => h + (i.sep ? 9 : 34), 20);
+    this.menu.set({ x: Math.max(4, Math.min(ev.clientX, window.innerWidth - 260)), y: Math.max(4, Math.min(ev.clientY, window.innerHeight - height)), items });
+  }
+
   placeMouse(ev: MouseEvent, path: string) { if (ev.button === 1) { ev.preventDefault(); this.state.newTab(path, false); } }
 
   /* ---------- properties ---------- */

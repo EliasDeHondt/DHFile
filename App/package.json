@@ -1,7 +1,7 @@
 {
   "name": "dhfile",
   "productName": "DHFile",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "DHFile, a modern tabbed file explorer for Windows, by Elias De Hondt.",
   "author": "Elias De Hondt",
   "license": "SEE LICENSE IN LICENSE.md",

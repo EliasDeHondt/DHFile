@@ -1,7 +1,7 @@
 import { app } from 'electron';
 import { existsSync, mkdirSync, readFileSync, renameSync, watch, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { DEFAULT_SETTINGS, Settings } from '../shared/types';
+import { DEFAULT_SETTINGS, Settings, SIDE_SECTIONS } from '../shared/types';
 
 let cache: Settings | null = null;
 let lastWritten = '';
@@ -27,6 +27,7 @@ export function sanitize(raw: any): Settings {
   if (!['name', 'mtime', 'type', 'size'].includes(s.sortKey)) s.sortKey = DEFAULT_SETTINGS.sortKey;
   if (!['home', 'pc', 'last', 'custom'].includes(s.startup)) s.startup = DEFAULT_SETTINGS.startup;
   s.pinned = s.pinned.filter(p => typeof p === 'string' && p.length > 0);
+  s.hiddenSections = [...new Set(s.hiddenSections)].filter(x => SIDE_SECTIONS.includes(x));
   s.lastTabs = s.lastTabs.filter(p => typeof p === 'string' && p.length > 0).slice(0, 30);
   return s;
 }

@@ -16,6 +16,7 @@ export const bridge = {
   openSettingsFile: (): Promise<string> => api.invoke('settings:open-file'),
 
   list: (path: string): Promise<Listing> => api.invoke('fs:list', path),
+  peek: (path: string): Promise<Entry[]> => api.invoke('fs:peek', path),
   drives: (refresh = false): Promise<Drive[]> => api.invoke('fs:drives', refresh),
   network: (): Promise<{ name: string; path: string }[]> => api.invoke('fs:network'),
   resolve: (input: string): Promise<{ path: string; dir: boolean } | null> => api.invoke('fs:resolve', input),

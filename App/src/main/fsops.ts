@@ -2,7 +2,7 @@ import { execFile } from 'node:child_process';
 import { constants, Dirent, FSWatcher, watch } from 'node:fs';
 import { chmod, cp, lstat, mkdir, readdir, readFile, rename, rm, stat, writeFile, open } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
-import { extOf, isInside, joinPath, matcher, normalizePath, samePath, uniqueName } from '../shared/files';
+import { extOf, hasThumbnail, isInside, joinPath, matcher, naturalCompare, normalizePath, samePath, uniqueName } from '../shared/files';
 import { Entry, Listing, OpResult, Preview, Properties, TransferRequest, TransferResult } from '../shared/types';
 
 const SYSTEM_NAMES = new Set(['$recycle.bin', 'system volume information', 'pagefile.sys', 'hiberfil.sys', 'swapfile.sys', 'dumpstack.log.tmp', 'dumpstack.log', 'desktop.ini', 'thumbs.db', 'config.msi', '$winreagent', '$windows.~ws', '$windows.~bt', '$sysreset', 'recovery', 'documents and settings', 'ntuser.dat']);
@@ -45,6 +45,25 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promis
   let i = 0;
   await Promise.all(Array.from({ length: Math.min(limit, items.length) }, async () => { while (i < items.length) { const k = i++; out[k] = await fn(items[k]); } }));
   return out;
+}
+
+/**
+ * A few files from a folder for the "peek inside" folder icon, pictures first like Explorer.
+ * Only the chosen files are stat'ed, so big folders stay cheap.
+ */
+export async function peek(path: string, max = 3): Promise<Entry[]> {
+  const dir = normalizePath(path);
+  try {
+    const files = (await readdir(dir, { withFileTypes: true }))
+      .filter(d => (d.isFile() || d.isSymbolicLink()) && !d.name.startsWith('.') && !d.name.startsWith('~$') && !SYSTEM_NAMES.has(d.name.toLowerCase()))
+      .sort((a, b) => naturalCompare(a.name, b.name));
+    const pictures = files.filter(d => hasThumbnail({ dir: false, ext: extOf(d.name) }));
+    const pick = [...pictures, ...files.filter(d => !pictures.includes(d))].slice(0, max);
+    const none = new Set<string>();
+    return (await Promise.all(pick.map(d => toEntry(dir, d, none)))).filter((e): e is Entry => !!e && !e.dir);
+  } catch {
+    return [];
+  }
 }
 
 export async function list(path: string): Promise<Listing> {

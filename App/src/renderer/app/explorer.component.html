@@ -55,8 +55,9 @@
 </div>
 
 <div class="body" [style.--sidebar.px]="s().sidebarWidth" [class.body--resizing]="resizing()">
-  <aside class="sidebar" [attr.aria-label]="'side.label' | t">
-    <p class="side-heading side-heading--drop" [class.drop]="dropTarget() === 'pin:'" (dragover)="pinDragOver($event)" (dragleave)="dragLeave($event)" (drop)="dropPin($event)">{{ 'side.pinned' | t }}</p>
+  <aside class="sidebar" [attr.aria-label]="'side.label' | t" (contextmenu)="sideContext($event, null)">
+    @if (showSection('pinned')) {
+    <p class="side-heading side-heading--drop" [class.drop]="dropTarget() === 'pin:'" (dragover)="pinDragOver($event)" (dragleave)="dragLeave($event)" (drop)="dropPin($event)" (contextmenu)="sideContext($event, 'pinned')">{{ 'side.pinned' | t }}</p>
     @for (p of pinned(); track p) {
       <button class="side-item" [class.side-item--on]="isCurrent(p)" (click)="go(p)" (mousedown)="placeMouse($event, p)" (contextmenu)="placeContext($event, p, true)"
               (dragover)="dragOver($event, p)" (dragleave)="dragLeave($event)" (drop)="drop($event, p)" [class.drop]="dropTarget() === p" [title]="p">
@@ -66,19 +67,28 @@
     } @empty {
       <p class="side-hint">{{ 'side.pinHint' | t }}</p>
     }
+    }
 
-    <p class="side-heading">{{ 'side.folders' | t }}</p>
+    @if (showSection('folders')) {
+    <p class="side-heading" (contextmenu)="sideContext($event, 'folders')">{{ 'side.folders' | t }}</p>
     @for (p of state.places(); track p.id) {
       <button class="side-item" [class.side-item--on]="isCurrent(p.path)" (click)="go(p.path)" (mousedown)="placeMouse($event, p.path)" (contextmenu)="placeContext($event, p.path, false)"
               (dragover)="dragOver($event, p.path)" (dragleave)="dragLeave($event)" (drop)="drop($event, p.path)" [class.drop]="dropTarget() === p.path" [title]="p.path">
         <app-file-icon [special]="p.id" [px]="18"></app-file-icon><span class="side-text">{{ placeLabel(p.id) }}</span>
       </button>
     }
+    }
 
-    <p class="side-heading">{{ 'side.devices' | t }}</p>
-    <button class="side-item" [class.side-item--on]="tab().isPc()" (click)="go(PC)" (mousedown)="placeMouse($event, PC)">
-      <app-file-icon special="pc" [px]="18"></app-file-icon><span class="side-text">{{ 'place.pc' | t }}</span>
-    </button>
+    @if (showSection('devices')) {
+    <p class="side-heading" (contextmenu)="sideContext($event, 'devices')">{{ 'side.devices' | t }}</p>
+    <div class="side-row">
+      <button class="side-item side-item--twisty" [class.side-item--on]="tab().isPc()" (click)="go(PC)" (mousedown)="placeMouse($event, PC)" (contextmenu)="pcContext($event)">
+        <app-file-icon special="pc" [px]="18"></app-file-icon><span class="side-text">{{ 'place.pc' | t }}</span>
+      </button>
+      <button class="side-twist" [class.side-twist--open]="!s().drivesCollapsed" (click)="toggleDrives()" [attr.aria-expanded]="!s().drivesCollapsed"
+              [title]="(s().drivesCollapsed ? 'side.expand' : 'side.collapse') | t" [attr.aria-label]="(s().drivesCollapsed ? 'side.expand' : 'side.collapse') | t"><app-icon name="chevronRight"></app-icon></button>
+    </div>
+    @if (!s().drivesCollapsed) {
     @for (d of usedDrives(); track d.letter) {
       <button class="side-item side-item--sub" [class.side-item--on]="isCurrent(d.path)" (click)="go(d.path)" (mousedown)="placeMouse($event, d.path)" (contextmenu)="placeContext($event, d.path, false)"
               (dragover)="dragOver($event, d.path)" (dragleave)="dragLeave($event)" (drop)="drop($event, d.path)" [class.drop]="dropTarget() === d.path">
@@ -91,9 +101,11 @@
         <app-file-icon special="drive:network" [px]="18"></app-file-icon><span class="side-text">{{ n.name }}</span>
       </button>
     }
+    }
     <button class="side-item" (click)="bridgeRecycle()">
       <app-file-icon special="recycle" [px]="18"></app-file-icon><span class="side-text">{{ 'place.recycle' | t }}</span>
     </button>
+    }
   </aside>
   <div class="splitter" (mousedown)="sidebarResize($event)" role="separator" aria-orientation="vertical"></div>
 
@@ -227,7 +239,7 @@
           } @else if (preview()?.kind === 'text') {
             <pre class="preview-text">{{ preview()!.text }}</pre>
           } @else {
-            <app-file-icon [entry]="e" [special]="special(e)" [px]="96" class="preview-icon"></app-file-icon>
+            <app-file-icon [entry]="e" [special]="special(e)" [px]="96" [thumbs]="true" class="preview-icon"></app-file-icon>
           }
         </div>
         <h3 class="preview-name">{{ e.name }}</h3>

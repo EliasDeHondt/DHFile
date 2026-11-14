@@ -86,6 +86,12 @@ export function fileIconSvg(kind: FileKind, ext: string): string {
 
 export function folderIconSvg(special?: string): string { return folderShape(special ? GLYPHS[special] ?? '' : ''); }
 
+/** The folder split in two layers so a few files can sit between them and peek out, like Explorer. */
+export const FOLDER_PEEK_BACK = `<path d="M4 11a4 4 0 0 1 4-4h10.6a4 4 0 0 1 2.8 1.2L24.2 11H40a4 4 0 0 1 4 4v22a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z" fill="${FOLDER_BACK}"/>`;
+export const FOLDER_PEEK_FRONT =
+  `<path d="M4 26a4 4 0 0 1 4-4h32a4 4 0 0 1 4 4v11a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z" fill="${FOLDER_FRONT}"/>` +
+  `<path d="M8 22.6h32" stroke="#8dbaf7" stroke-width="1.2" stroke-linecap="round" opacity=".9"/>`;
+
 export function driveIconSvg(type: string): string {
   const body = '<rect x="4" y="15" width="40" height="19" rx="4.5" fill="#3a4150"/><rect x="4" y="15" width="40" height="7" rx="3.5" fill="#4a5262"/>';
   const led = `<circle cx="37.5" cy="28" r="2" fill="${type === 'network' ? '#eda100' : '#1baf7a'}"/>`;

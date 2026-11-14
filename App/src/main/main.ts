@@ -128,6 +128,7 @@ function registerIpc() {
   ipcMain.handle('settings:open-file', () => shell.openPath(settingsPath()));
 
   ipcMain.handle('fs:list', (_e, path: string) => isUnlocked() ? fsx.list(str(path)) : { path: str(path), entries: [], error: 'locked', code: 'LOCKED' });
+  ipcMain.handle('fs:peek', (_e, path: string) => isUnlocked() ? fsx.peek(str(path)) : []);
   ipcMain.handle('fs:drives', (_e, refresh?: boolean) => isUnlocked() ? sys.drives(!!refresh) : []);
   ipcMain.handle('fs:network', () => isUnlocked() ? sys.networkLocations() : []);
   ipcMain.handle('fs:resolve', async (_e, input: string) => {
