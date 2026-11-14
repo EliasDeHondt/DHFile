@@ -1,0 +1,95 @@
+<header class="titlebar">
+  <button class="brand" (click)="state.overlay.set('about')" [title]="'bar.about' | t" [attr.aria-label]="'bar.about' | t"><img src="assets/logo.svg" alt="" draggable="false"><span class="brand-word">DHFile</span></button>
+  <div class="tabs" role="tablist" (dragover)="dragTab() !== null && $event.preventDefault()" (drop)="drop($event)">
+    @for (tab of state.tabs(); track tab.id; let i = $index) {
+      @if (dropIndex() === i) { <span class="drop-mark"></span> }
+      <div class="tab" role="tab" tabindex="0" [class.tab--active]="tab.id === state.activeTabId()" [class.tab--dragging]="dragTab() === tab.id"
+           [attr.aria-selected]="tab.id === state.activeTabId()" [title]="isFolder(tab) && tab.path() !== 'pc:' ? tab.path() : state.tabTitle(tab)"
+           draggable="true" (dragstart)="dragStart($event, tab)" (dragover)="dragOver($event, i)" (dragend)="dragEnd()"
+           (mousedown)="tabMouseDown($event, tab)" (contextmenu)="tabContext($event, tab)" (keydown.enter)="state.activateTab(tab.id)">
+        @if (isFolder(tab)) {
+          @if (tab.path() === 'pc:') { <app-file-icon class="tab-icon" special="pc" [px]="16"></app-file-icon> }
+          @else if (tab.path().length <= 3) { <app-file-icon class="tab-icon" special="drive:fixed" [px]="16"></app-file-icon> }
+          @else { <app-file-icon class="tab-icon" [special]="state.specialOf(tab.path())" [px]="16"></app-file-icon> }
+        } @else {
+          <app-icon name="gear" class="tab-icon"></app-icon>
+        }
+        <span class="tab-title">{{ state.tabTitle(tab) }}</span>
+        <button class="tab-close" (mousedown)="$event.stopPropagation()" (click)="state.closeTab(tab.id)" [title]="'bar.closeTab' | t" [attr.aria-label]="'bar.closeTab' | t"><app-icon name="close"></app-icon></button>
+      </div>
+    }
+    @if (dropIndex() === state.tabs().length) { <span class="drop-mark"></span> }
+    <div class="new-tab app-menu">
+      <button class="new-tab-btn" (click)="state.newTab()" [title]="'bar.newTab' | t" [attr.aria-label]="'bar.newTab' | t"><app-icon name="plus"></app-icon></button>
+      <button class="new-tab-btn new-tab-btn--chevron" (click)="menuOpen.set(!menuOpen())" [attr.aria-expanded]="menuOpen()" [title]="'bar.menu' | t" [attr.aria-label]="'bar.menu' | t" aria-haspopup="menu"><app-icon name="chevron"></app-icon></button>
+      @if (menuOpen()) {
+        <div class="menu menu--app" role="menu">
+          <button class="menu-item" role="menuitem" (click)="menu('window')"><app-icon class="menu-icon" name="window"></app-icon><span class="menu-label">{{ 'menu.newWindow' | t }}</span></button>
+          <div class="menu-sep"></div>
+          <button class="menu-item" role="menuitem" (click)="menu('settings')"><app-icon class="menu-icon" name="gear"></app-icon><span class="menu-label">{{ 'common.settings' | t }}</span></button>
+          <button class="menu-item" role="menuitem" (click)="menu('lock')"><app-icon class="menu-icon" name="lock"></app-icon><span class="menu-label">{{ 'common.lock' | t }}</span></button>
+          <button class="menu-item" role="menuitem" (click)="menu('about')"><app-icon class="menu-icon" name="help"></app-icon><span class="menu-label">{{ 'common.about' | t }}</span></button>
+        </div>
+      }
+    </div>
+    <div class="drag-space"></div>
+  </div>
+  <div class="bar-tools">
+    <select class="bar-lang" [value]="state.settings().language" (change)="state.saveSettings({ language: $any($event.target).value })" [attr.aria-label]="'bar.language' | t" [title]="'bar.language' | t">
+      <option value="nl" [selected]="state.settings().language === 'nl'">NL</option>
+      <option value="en" [selected]="state.settings().language === 'en'">EN</option>
+    </select>
+    <button class="bar-btn" (click)="state.toggleTheme()" [title]="(state.dark() ? 'bar.lightMode' : 'bar.darkMode') | t" [attr.aria-label]="(state.dark() ? 'bar.lightMode' : 'bar.darkMode') | t"><app-icon [name]="state.dark() ? 'sun' : 'moon'"></app-icon></button>
+  </div>
+</header>
+
+<main class="content">
+  @for (tab of state.tabs(); track tab.id) {
+    <section class="tab-page" [class.tab-page--hidden]="tab.id !== state.activeTabId()" [attr.aria-hidden]="tab.id !== state.activeTabId()">
+      @if (isFolder(tab)) { <app-explorer [tab]="tab" [active]="tab.id === state.activeTabId()"></app-explorer> }
+      @else { <app-settings></app-settings> }
+    </section>
+  }
+  @if (!state.tabs().length) {
+    <div class="loading"><img src="assets/logo.svg" alt="" draggable="false"><span class="spinner"></span></div>
+  }
+</main>
+
+@if (tabMenu(); as m) {
+  <div class="menu menu--floating" role="menu" [style.left.px]="clampX(m.x)" [style.top.px]="clampY(m.y)">
+    @if (isFolder(m.tab)) {
+      <button class="menu-item" role="menuitem" (click)="duplicate(m.tab)"><app-icon class="menu-icon" name="copy"></app-icon><span class="menu-label">{{ 'menu.duplicateTab' | t }}</span></button>
+      <button class="menu-item" role="menuitem" (click)="newWindowFrom(m.tab)"><app-icon class="menu-icon" name="window"></app-icon><span class="menu-label">{{ 'menu.tabToWindow' | t }}</span></button>
+      <div class="menu-sep"></div>
+    }
+    <button class="menu-item" role="menuitem" (click)="tabMenu.set(null); state.closeOtherTabs(m.tab.id)"><app-icon class="menu-icon" name="close"></app-icon><span class="menu-label">{{ 'menu.closeOthers' | t }}</span></button>
+    <button class="menu-item" role="menuitem" (click)="tabMenu.set(null); state.closeTab(m.tab.id)"><app-icon class="menu-icon" name="close"></app-icon><span class="menu-label">{{ 'bar.closeTab' | t }}</span></button>
+  </div>
+}
+
+@if (state.overlay() === 'about') {
+  <div class="overlay" (mousedown)="state.closeOverlay()">
+    <div class="dialog dialog--about" role="dialog" [attr.aria-label]="'bar.about' | t" (mousedown)="$event.stopPropagation()">
+      <img src="assets/logo.svg" alt="" width="72" height="72" draggable="false">
+      <h2 class="dialog-title dialog-title--brand">DHFile</h2>
+      <p class="dialog-by">{{ 'about.by' | t }} <b class="by">Elias De Hondt</b></p>
+      <p class="dialog-text dialog-text--muted">{{ 'about.version' | t: { v: state.info()?.version ?? '' } }}</p>
+      <p class="dialog-text"><a href="#" (click)="$event.preventDefault(); openLink('https://eliasdh.com')">eliasdh.com</a></p>
+      <div class="dialog-actions"><button class="btn btn--primary" (click)="state.closeOverlay()" autofocus>{{ 'common.close' | t }}</button></div>
+    </div>
+  </div>
+}
+
+<div class="toasts" aria-live="polite">
+  @for (toast of state.toasts(); track toast.id) {
+    <div class="toast" [class.toast--error]="toast.kind === 'error'">
+      @if (toast.kind === 'busy') { <span class="spinner"></span> } @else if (toast.kind === 'error') { <app-icon name="info"></app-icon> } @else { <app-icon name="check"></app-icon> }
+      <span class="toast-text">{{ toast.text }}</span>
+      <button class="toast-close" (click)="state.dismiss(toast.id)" [attr.aria-label]="'common.close' | t"><app-icon name="close"></app-icon></button>
+    </div>
+  }
+</div>
+
+@if (lock.mode() !== 'unlocked' && lock.mode() !== 'checking') {
+  <app-lock-screen></app-lock-screen>
+}

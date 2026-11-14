@@ -1,0 +1,134 @@
+<nav class="nav" [attr.aria-label]="'nav.label' | t">
+  <button class="nav-item" [class.nav-item--on]="section() === 'general'" (click)="go('general')"><app-icon name="rocket"></app-icon>{{ 'set.general' | t }}</button>
+  <button class="nav-item" [class.nav-item--on]="section() === 'view'" (click)="go('view')"><app-icon name="grid"></app-icon>{{ 'set.view' | t }}</button>
+  <button class="nav-item" [class.nav-item--on]="section() === 'appearance'" (click)="go('appearance')"><app-icon name="brush"></app-icon>{{ 'set.appearance' | t }}</button>
+  <button class="nav-item" [class.nav-item--on]="section() === 'security'" (click)="go('security')"><app-icon name="lock"></app-icon>{{ 'set.security' | t }}</button>
+  <button class="nav-item" [class.nav-item--on]="section() === 'about'" (click)="go('about')"><app-icon name="help"></app-icon>{{ 'common.about' | t }}</button>
+  <div class="nav-foot">
+    <button class="nav-item" (click)="openJson()"><app-icon name="external"></app-icon>{{ 'set.openJson' | t }}</button>
+  </div>
+</nav>
+
+<div class="page">
+  @switch (section()) {
+    @case ('general') {
+      <h1 class="page-title">{{ 'set.general' | t }}</h1>
+      <div class="card">
+        <div class="row">
+          <span class="row-text"><span class="row-title">{{ 'gen.startup' | t }}</span><span class="row-sub">{{ s().startup === 'custom' && s().startupPath ? s().startupPath : ('gen.startupSub' | t) }}</span></span>
+          <div class="row-input">
+            <select class="select" (change)="$any($event.target).value === 'custom' ? pickStart() : set('startup', $any($event.target).value)">
+              <option value="home" [selected]="s().startup === 'home'">{{ 'gen.startHome' | t }}</option>
+              <option value="pc" [selected]="s().startup === 'pc'">{{ 'place.pc' | t }}</option>
+              <option value="last" [selected]="s().startup === 'last'">{{ 'gen.startLast' | t }}</option>
+              <option value="custom" [selected]="s().startup === 'custom'">{{ 'gen.startCustom' | t }}</option>
+            </select>
+            @if (s().startup === 'custom') { <button class="btn btn--icon" (click)="pickStart()" [title]="'gen.pick' | t" [attr.aria-label]="'gen.pick' | t"><app-icon name="folder"></app-icon></button> }
+          </div>
+        </div>
+        <label class="row">
+          <span class="row-text"><span class="row-title">{{ 'gen.confirmDelete' | t }}</span><span class="row-sub">{{ 'gen.confirmDeleteSub' | t }}</span></span>
+          <input type="checkbox" class="switch" [checked]="s().confirmDelete" (change)="set('confirmDelete', $any($event.target).checked)">
+        </label>
+      </div>
+
+      <h2 class="page-h2">{{ 'gen.windows' | t }}</h2>
+      <div class="card">
+        <label class="row">
+          <span class="row-text"><span class="row-title">{{ 'gen.default' | t }}</span><span class="row-sub">{{ 'gen.defaultSub' | t }}</span></span>
+          @if (defaultBusy()) { <span class="spinner"></span> }
+          @else { <input type="checkbox" class="switch" [checked]="defaultActual() ?? s().defaultFolderApp" (change)="setDefault($any($event.target).checked)" [disabled]="!state.info()?.packaged"> }
+        </label>
+        <div class="row">
+          <span class="row-text"><span class="row-title">{{ 'gen.context' | t }}</span><span class="row-sub">{{ 'gen.contextSub' | t }}</span></span>
+        </div>
+      </div>
+    }
+    @case ('view') {
+      <h1 class="page-title">{{ 'set.view' | t }}</h1>
+      <div class="card">
+        <label class="row">
+          <span class="row-text"><span class="row-title">{{ 'view.layout' | t }}</span></span>
+          <select class="select" (change)="state.saveSettings($any($event.target).value === 'details' ? { view: 'details' } : { view: 'grid', iconSize: $any($event.target).value })">
+            <option value="details" [selected]="s().view === 'details'">{{ 'view.details' | t }}</option>
+            <option value="small" [selected]="s().view === 'grid' && s().iconSize === 'small'">{{ 'view.small' | t }}</option>
+            <option value="medium" [selected]="s().view === 'grid' && s().iconSize === 'medium'">{{ 'view.medium' | t }}</option>
+            <option value="large" [selected]="s().view === 'grid' && s().iconSize === 'large'">{{ 'view.large' | t }}</option>
+          </select>
+        </label>
+        <label class="row">
+          <span class="row-text"><span class="row-title">{{ 'view.hidden' | t }}</span><span class="row-sub">{{ 'view.hiddenSub' | t }}</span></span>
+          <input type="checkbox" class="switch" [checked]="s().showHidden" (change)="set('showHidden', $any($event.target).checked)">
+        </label>
+        <label class="row">
+          <span class="row-text"><span class="row-title">{{ 'view.extensions' | t }}</span><span class="row-sub">{{ 'view.extensionsSub' | t }}</span></span>
+          <input type="checkbox" class="switch" [checked]="s().showExtensions" (change)="set('showExtensions', $any($event.target).checked)">
+        </label>
+        <label class="row">
+          <span class="row-text"><span class="row-title">{{ 'sort.foldersFirst' | t }}</span></span>
+          <input type="checkbox" class="switch" [checked]="s().foldersFirst" (change)="set('foldersFirst', $any($event.target).checked)">
+        </label>
+        <label class="row">
+          <span class="row-text"><span class="row-title">{{ 'view.preview' | t }}</span><span class="row-sub">{{ 'view.previewSub' | t }}</span></span>
+          <input type="checkbox" class="switch" [checked]="s().preview" (change)="set('preview', $any($event.target).checked)">
+        </label>
+      </div>
+    }
+    @case ('appearance') {
+      <h1 class="page-title">{{ 'set.appearance' | t }}</h1>
+      <div class="card">
+        <label class="row">
+          <span class="row-text"><span class="row-title">{{ 'look.theme' | t }}</span></span>
+          <select class="select" (change)="set('theme', $any($event.target).value)">
+            <option value="system" [selected]="s().theme === 'system'">{{ 'look.system' | t }}</option>
+            <option value="dark" [selected]="s().theme === 'dark'">{{ 'look.dark' | t }}</option>
+            <option value="light" [selected]="s().theme === 'light'">{{ 'look.light' | t }}</option>
+          </select>
+        </label>
+        <label class="row">
+          <span class="row-text"><span class="row-title">{{ 'bar.language' | t }}</span><span class="row-sub">{{ 'look.languageSub' | t }}</span></span>
+          <select class="select" (change)="set('language', $any($event.target).value)">
+            <option value="nl" [selected]="s().language === 'nl'">Nederlands</option>
+            <option value="en" [selected]="s().language === 'en'">English</option>
+          </select>
+        </label>
+        <label class="row">
+          <span class="row-text"><span class="row-title">Mica</span><span class="row-sub">{{ 'look.micaSub' | t }}</span></span>
+          <input type="checkbox" class="switch" [checked]="s().mica" (change)="set('mica', $any($event.target).checked)" [disabled]="(state.info()?.osBuild ?? 0) < 22000">
+        </label>
+      </div>
+    }
+    @case ('security') {
+      <h1 class="page-title">{{ 'sec.title' | t }}</h1>
+      <p class="page-sub">{{ 'sec.sub' | t }}</p>
+      <div class="card">
+        <div class="row">
+          <span class="row-text"><span class="row-title">{{ 'sec.lockNow' | t }}</span><span class="row-sub">{{ 'sec.lockNowSub' | t }}</span></span>
+          <button class="btn btn--primary" (click)="lock.lock()"><app-icon name="lock"></app-icon>{{ 'common.lock' | t }}</button>
+        </div>
+        <label class="row">
+          <span class="row-text"><span class="row-title">{{ 'sec.auto' | t }}</span><span class="row-sub">{{ 'sec.autoSub' | t }}</span></span>
+          <select class="select" (change)="num('autoLockMinutes', $any($event.target).value)">
+            @for (m of lockTimes; track m.value) { <option [value]="m.value" [selected]="m.value === s().autoLockMinutes">{{ m.label | t: { n: m.n } }}</option> }
+          </select>
+        </label>
+        <div class="row">
+          <span class="row-text"><span class="row-title">{{ 'sec.pin' | t }}</span><span class="row-sub">{{ 'sec.pinSub' | t }}</span></span>
+          <button class="btn" (click)="lock.beginChange()"><app-icon name="key"></app-icon>{{ 'sec.change' | t }}</button>
+        </div>
+      </div>
+    }
+    @case ('about') {
+      <div class="about">
+        <img class="about-logo" src="assets/logo.svg" alt="" draggable="false">
+        <h1 class="about-title">DHFile</h1>
+        <p class="about-by">{{ 'about.by' | t }} <b class="by">Elias De Hondt</b></p>
+        <dl class="about-meta">
+          <dt>{{ 'about.versionLabel' | t }}</dt><dd>{{ state.info()?.version }}</dd>
+          <dt>{{ 'about.file' | t }}</dt><dd>{{ state.info()?.settingsPath }}</dd>
+          <dt>Website</dt><dd><a href="#" (click)="$event.preventDefault(); openSite()">eliasdh.com</a></dd>
+        </dl>
+      </div>
+    }
+  }
+</div>

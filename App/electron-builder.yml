@@ -1,0 +1,35 @@
+appId: com.eliasdehondt.dhfile
+productName: DHFile
+copyright: Copyright © Elias De Hondt
+directories:
+  output: release
+  buildResources: build
+files:
+  - dist/main/**/*
+  - dist/renderer/browser/**/*
+  - build/icon.png
+  - package.json
+npmRebuild: false
+asar: true
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: build/icon.png
+  artifactName: ${productName}-Setup-v${version}.${ext}
+nsis:
+  oneClick: true
+  perMachine: false
+  runAfterFinish: true
+  deleteAppDataOnUninstall: false
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: DHFile
+  uninstallDisplayName: DHFile
+  include: build/installer.nsh
+  differentialPackage: false
+  installerLanguages:
+    - en_US
+  language: '1033'
+  multiLanguageInstaller: false

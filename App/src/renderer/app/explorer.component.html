@@ -1,0 +1,343 @@
+<div class="toolbar">
+  <div class="nav-btns">
+    <button class="tool" (click)="tab().back()" [disabled]="!tab().canBack()" [title]="'nav.back' | t" [attr.aria-label]="'nav.back' | t"><app-icon name="back"></app-icon></button>
+    <button class="tool" (click)="tab().forward()" [disabled]="!tab().canForward()" [title]="'nav.forward' | t" [attr.aria-label]="'nav.forward' | t"><app-icon name="forward"></app-icon></button>
+    <button class="tool" (click)="tab().up()" [disabled]="!tab().canUp()" [title]="'nav.up' | t" [attr.aria-label]="'nav.up' | t"><app-icon name="arrowUp"></app-icon></button>
+    <button class="tool" (click)="refresh()" [title]="'nav.refresh' | t" [attr.aria-label]="'nav.refresh' | t"><app-icon name="refresh"></app-icon></button>
+  </div>
+
+  <div class="address" [class.address--edit]="editingAddress()" (click)="startAddressEdit()" (dragover)="$event.preventDefault()">
+    @if (editingAddress()) {
+      <input #addressInput class="address-input" [value]="tab().path() === PC ? ('place.pc' | t) : tab().path()" (keydown)="addressKey($event)" (blur)="editingAddress.set(false)" spellcheck="false" [attr.aria-label]="'nav.address' | t">
+    } @else {
+      <div class="crumbs" role="navigation" [attr.aria-label]="'nav.address' | t">
+        <button class="crumb crumb--root" (click)="$event.stopPropagation(); go(PC)" [title]="'place.pc' | t"><app-file-icon special="pc" [px]="16"></app-file-icon></button>
+        <button class="crumb-chev" (click)="crumbMenu($event, PC)" [attr.aria-label]="'nav.subfolders' | t"><app-icon name="chevronRight"></app-icon></button>
+        <div class="crumb-track">
+          <span class="crumb-space"></span>
+          @if (tab().isPc()) { <button class="crumb crumb--last" (click)="$event.stopPropagation()">{{ 'place.pc' | t }}</button> }
+          @for (c of crumbsReversed(); track c.path; let first = $first) {
+            @if (!first) { <button class="crumb-chev" (click)="crumbMenu($event, c.path)" [attr.aria-label]="'nav.subfolders' | t"><app-icon name="chevronRight"></app-icon></button> }
+            <button class="crumb" [class.crumb--last]="first" (click)="$event.stopPropagation(); go(c.path)" [title]="c.path"
+                    (dragover)="dragOver($event, c.path)" (dragleave)="dragLeave($event)" (drop)="drop($event, c.path)" [class.drop]="dropTarget() === c.path">{{ crumbLabel(c.path, c.label) }}</button>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <label class="search" [class.search--on]="!!searchText()">
+    <app-icon name="search"></app-icon>
+    <input #searchInput class="search-input" [value]="searchText()" (input)="onSearchInput($any($event.target).value)" (keydown)="searchKey($event)" [placeholder]="'search.placeholder' | t: { name: folderTitle() }" [disabled]="tab().isPc()" spellcheck="false" [attr.aria-label]="'search.label' | t">
+    @if (tab().searching()) { <span class="spinner"></span> }
+    @if (searchText()) { <button class="search-clear" (click)="clearSearch()" [attr.aria-label]="'search.clear' | t"><app-icon name="close"></app-icon></button> }
+  </label>
+</div>
+
+<div class="cmdbar">
+  <button class="cmd cmd--label" (click)="newMenu($event)" [disabled]="!canWrite()"><app-icon name="plus"></app-icon>{{ 'cmd.new' | t }}<app-icon class="cmd-chev" name="chevron"></app-icon></button>
+  <span class="cmd-sep"></span>
+  <button class="cmd" (click)="copy('move')" [disabled]="!selectedEntries().length" [title]="'menu.cut' | t" [attr.aria-label]="'menu.cut' | t"><app-icon name="cut"></app-icon></button>
+  <button class="cmd" (click)="copy('copy')" [disabled]="!selectedEntries().length" [title]="'menu.copy' | t" [attr.aria-label]="'menu.copy' | t"><app-icon name="copy"></app-icon></button>
+  <button class="cmd" (click)="paste()" [disabled]="!canWrite()" [title]="'menu.paste' | t" [attr.aria-label]="'menu.paste' | t"><app-icon name="paste"></app-icon></button>
+  <button class="cmd" (click)="startRename()" [disabled]="selectedEntries().length !== 1" [title]="'menu.rename' | t" [attr.aria-label]="'menu.rename' | t"><app-icon name="edit"></app-icon></button>
+  <button class="cmd" (click)="copyPath()" [disabled]="tab().isPc() && !selectedEntries().length" [title]="'menu.copyPath' | t" [attr.aria-label]="'menu.copyPath' | t"><app-icon name="link"></app-icon></button>
+  <button class="cmd cmd--danger" (click)="askDelete(false)" [disabled]="!selectedEntries().length" [title]="'menu.delete' | t" [attr.aria-label]="'menu.delete' | t"><app-icon name="trash"></app-icon></button>
+  <span class="cmd-sep"></span>
+  <button class="cmd cmd--label" (click)="sortMenu($event)" [disabled]="tab().isPc()"><app-icon name="sort"></app-icon>{{ 'cmd.sort' | t }}<app-icon class="cmd-chev" name="chevron"></app-icon></button>
+  <button class="cmd cmd--label" (click)="viewMenu($event)"><app-icon [name]="grid() ? 'grid' : 'list'"></app-icon>{{ 'cmd.view' | t }}<app-icon class="cmd-chev" name="chevron"></app-icon></button>
+  <span class="cmd-fill"></span>
+  @if (!tab().isPc()) {
+    <button class="cmd cmd--label" (click)="bridgeTerminal()" [title]="terminalLabel()"><app-icon name="terminal"></app-icon><span class="cmd-text">{{ 'cmd.terminal' | t }}</span></button>
+  }
+  <button class="cmd" [class.cmd--on]="s().preview" (click)="state.saveSettings({ preview: !s().preview })" [title]="'view.preview' | t" [attr.aria-label]="'view.preview' | t"><app-icon name="panel"></app-icon></button>
+  <button class="cmd" (click)="moreMenu($event)" [title]="'cmd.more' | t" [attr.aria-label]="'cmd.more' | t"><app-icon name="more"></app-icon></button>
+</div>
+
+<div class="body" [style.--sidebar.px]="s().sidebarWidth" [class.body--resizing]="resizing()">
+  <aside class="sidebar" [attr.aria-label]="'side.label' | t">
+    <p class="side-heading side-heading--drop" [class.drop]="dropTarget() === 'pin:'" (dragover)="pinDragOver($event)" (dragleave)="dragLeave($event)" (drop)="dropPin($event)">{{ 'side.pinned' | t }}</p>
+    @for (p of pinned(); track p) {
+      <button class="side-item" [class.side-item--on]="isCurrent(p)" (click)="go(p)" (mousedown)="placeMouse($event, p)" (contextmenu)="placeContext($event, p, true)"
+              (dragover)="dragOver($event, p)" (dragleave)="dragLeave($event)" (drop)="drop($event, p)" [class.drop]="dropTarget() === p" [title]="p">
+        @if (p.length <= 3) { <app-file-icon special="drive:fixed" [px]="18"></app-file-icon> } @else { <app-file-icon [special]="state.specialOf(p)" [px]="18"></app-file-icon> }
+        <span class="side-text">{{ pinLabel(p) }}</span><app-icon class="side-pin" name="pin"></app-icon>
+      </button>
+    } @empty {
+      <p class="side-hint">{{ 'side.pinHint' | t }}</p>
+    }
+
+    <p class="side-heading">{{ 'side.folders' | t }}</p>
+    @for (p of state.places(); track p.id) {
+      <button class="side-item" [class.side-item--on]="isCurrent(p.path)" (click)="go(p.path)" (mousedown)="placeMouse($event, p.path)" (contextmenu)="placeContext($event, p.path, false)"
+              (dragover)="dragOver($event, p.path)" (dragleave)="dragLeave($event)" (drop)="drop($event, p.path)" [class.drop]="dropTarget() === p.path" [title]="p.path">
+        <app-file-icon [special]="p.id" [px]="18"></app-file-icon><span class="side-text">{{ placeLabel(p.id) }}</span>
+      </button>
+    }
+
+    <p class="side-heading">{{ 'side.devices' | t }}</p>
+    <button class="side-item" [class.side-item--on]="tab().isPc()" (click)="go(PC)" (mousedown)="placeMouse($event, PC)">
+      <app-file-icon special="pc" [px]="18"></app-file-icon><span class="side-text">{{ 'place.pc' | t }}</span>
+    </button>
+    @for (d of usedDrives(); track d.letter) {
+      <button class="side-item side-item--sub" [class.side-item--on]="isCurrent(d.path)" (click)="go(d.path)" (mousedown)="placeMouse($event, d.path)" (contextmenu)="placeContext($event, d.path, false)"
+              (dragover)="dragOver($event, d.path)" (dragleave)="dragLeave($event)" (drop)="drop($event, d.path)" [class.drop]="dropTarget() === d.path">
+        <app-file-icon [special]="'drive:' + d.type" [px]="18"></app-file-icon><span class="side-text">{{ state.driveName(d.letter) }}</span>
+      </button>
+    }
+    @for (n of state.network(); track n.path) {
+      <button class="side-item side-item--sub" [class.side-item--on]="isCurrent(n.path)" (click)="go(n.path)" (mousedown)="placeMouse($event, n.path)" (contextmenu)="placeContext($event, n.path, false)"
+              (dragover)="dragOver($event, n.path)" (dragleave)="dragLeave($event)" (drop)="drop($event, n.path)" [class.drop]="dropTarget() === n.path" [title]="n.path">
+        <app-file-icon special="drive:network" [px]="18"></app-file-icon><span class="side-text">{{ n.name }}</span>
+      </button>
+    }
+    <button class="side-item" (click)="bridgeRecycle()">
+      <app-file-icon special="recycle" [px]="18"></app-file-icon><span class="side-text">{{ 'place.recycle' | t }}</span>
+    </button>
+  </aside>
+  <div class="splitter" (mousedown)="sidebarResize($event)" role="separator" aria-orientation="vertical"></div>
+
+  <section class="main" [class.main--search]="searching()" (dragover)="dragOver($event, canWrite() ? tab().path() : null)" (dragleave)="dragLeave($event)" (drop)="drop($event, canWrite() ? tab().path() : null)" [class.main--drop]="dropTarget() === tab().path()">
+    @if (searching()) {
+      <div class="banner">
+        @if (tab().searching()) { <span class="spinner"></span> } @else { <app-icon name="search"></app-icon> }
+        <span>{{ (tab().searching() ? 'search.busy' : 'search.done') | t: { n: visible().length, name: folderTitle() } }}</span>
+        <button class="btn btn--ghost banner-btn" (click)="clearSearch()">{{ 'search.clear' | t }}</button>
+      </div>
+    }
+
+    @if (tab().isPc()) {
+      <div class="pc" #viewport tabindex="0" (contextmenu)="bgContext($event)">
+        <h2 class="pc-title">{{ 'pc.folders' | t }}</h2>
+        <div class="pc-grid">
+          @for (p of state.places(); track p.id) {
+            <button class="pc-tile" (click)="go(p.path)" (mousedown)="placeMouse($event, p.path)" (contextmenu)="$event.stopPropagation(); placeContext($event, p.path, false)">
+              <app-file-icon [special]="p.id" [px]="40"></app-file-icon><span class="pc-name">{{ placeLabel(p.id) }}</span>
+            </button>
+          }
+        </div>
+        @if (pinned().length) {
+          <h2 class="pc-title">{{ 'side.pinned' | t }}</h2>
+          <div class="pc-grid">
+            @for (p of pinned(); track p) {
+              <button class="pc-tile" (click)="go(p)" (mousedown)="placeMouse($event, p)" (contextmenu)="$event.stopPropagation(); placeContext($event, p, true)" [title]="p">
+                <app-file-icon [special]="p.length <= 3 ? 'drive:fixed' : state.specialOf(p)" [px]="40"></app-file-icon><span class="pc-name">{{ pinLabel(p) }}</span>
+              </button>
+            }
+          </div>
+        }
+        <h2 class="pc-title">{{ 'pc.drives' | t }}</h2>
+        <div class="pc-grid pc-grid--drives">
+          @for (d of usedDrives(); track d.letter) {
+            <button class="pc-drive" (click)="go(d.path)" (mousedown)="placeMouse($event, d.path)" (contextmenu)="$event.stopPropagation(); placeContext($event, d.path, false)">
+              <app-file-icon [special]="'drive:' + d.type" [px]="44"></app-file-icon>
+              <span class="pc-drive-text">
+                <span class="pc-name">{{ state.driveName(d.letter) }}</span>
+                @if (d.total) {
+                  <span class="pc-bar" [class.pc-bar--full]="driveUse(d) >= 90"><span [style.width.%]="driveUse(d)"></span></span>
+                  <span class="pc-free">{{ 'pc.free' | t: { free: size(d.free), total: size(d.total) } }}</span>
+                }
+              </span>
+            </button>
+          }
+        </div>
+        @if (state.network().length) {
+          <h2 class="pc-title">{{ 'pc.network' | t }}</h2>
+          <div class="pc-grid">
+            @for (n of state.network(); track n.path) {
+              <button class="pc-tile" (click)="go(n.path)" (mousedown)="placeMouse($event, n.path)" [title]="n.path">
+                <app-file-icon special="drive:network" [px]="40"></app-file-icon><span class="pc-name">{{ n.name }}</span>
+              </button>
+            }
+          </div>
+        }
+      </div>
+    } @else {
+      @if (!grid()) {
+        <div class="head" role="row">
+          @for (col of ['name', 'mtime', 'type', 'size']; track col) {
+            <button class="head-cell" [class.head-cell--num]="col === 'size'" [class.head-cell--on]="s().sortKey === col" (click)="sortBy($any(col))" role="columnheader">
+              {{ ('col.' + (col === 'mtime' ? 'modified' : col)) | t }}
+              @if (s().sortKey === col) { <app-icon [name]="s().sortDir > 0 ? 'up' : 'down'"></app-icon> }
+            </button>
+            @if (col === 'name' && searching()) { <span class="head-cell head-cell--static">{{ 'col.folder' | t }}</span> }
+          }
+        </div>
+      }
+      <div class="viewport" #viewport tabindex="0" role="grid" [attr.aria-label]="folderTitle()" [class.viewport--search]="searching()"
+           (mousedown)="bgDown($event)" (contextmenu)="bgContext($event)">
+        @if (tab().loading() && !visible().length) {
+          <div class="state"><span class="spinner"></span></div>
+        } @else if (tab().error(); as err) {
+          <div class="state">
+            <app-icon name="lock" class="state-icon"></app-icon>
+            <p class="state-title">{{ (err.code === 'EPERM' || err.code === 'EACCES' ? 'err.denied' : err.code === 'ENOENT' ? 'err.gone' : 'err.list') | t }}</p>
+            <p class="state-sub">{{ err.message }}</p>
+          </div>
+        } @else if (!visible().length) {
+          <div class="state"><p class="state-sub">{{ (searching() ? (tab().searching() ? 'search.busyEmpty' : 'search.empty') : 'list.empty') | t }}</p></div>
+        } @else if (grid()) {
+          <div class="tiles" [style.paddingTop.px]="padTop() + 8" [style.paddingBottom.px]="padBottom() + 8" [style.gridTemplateColumns]="'repeat(' + cols() + ', ' + tile().w + 'px)'" [style.--tile-h.px]="tile().h">
+            @for (row of slice(); track row.e.path) {
+              <div class="item tile" role="gridcell" [class.item--sel]="isSelected(row.e)" [class.item--focus]="tab().focus() === row.e.path" [class.item--cut]="state.isCut(row.e.path)" [class.item--hidden]="row.e.hidden" [class.drop]="dropTarget() === row.e.path"
+                   draggable="true" (dragstart)="dragStart($event, row.e)" (mousedown)="itemDown($event, row.e)" (click)="itemClick($event, row.e)" (dblclick)="open(row.e)" (contextmenu)="itemContext($event, row.e)"
+                   (dragover)="row.e.dir ? dragOver($event, row.e.path) : null" (dragleave)="dragLeave($event)" (drop)="row.e.dir ? drop($event, row.e.path) : null" [title]="row.e.name">
+                <span class="tile-icon" [style.--icon-size.px]="tile().icon"><app-file-icon [entry]="row.e" [special]="special(row.e)" [px]="tile().icon" [thumbs]="true"></app-file-icon></span>
+                @if (tab().renaming() === row.e.path) {
+                  <textarea class="rename-input rename-input--tile" rows="2" [value]="name(row.e)" (keydown)="renameKey($event, row.e)" (blur)="commitRename(row.e, $any($event.target).value)" (mousedown)="$event.stopPropagation()" spellcheck="false"></textarea>
+                } @else {
+                  <span class="tile-name">{{ name(row.e) }}</span>
+                }
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="rows" [style.paddingTop.px]="padTop()" [style.paddingBottom.px]="padBottom()">
+            @for (row of slice(); track row.e.path) {
+              <div class="item row" role="row" [class.item--sel]="isSelected(row.e)" [class.item--focus]="tab().focus() === row.e.path" [class.item--cut]="state.isCut(row.e.path)" [class.item--hidden]="row.e.hidden" [class.drop]="dropTarget() === row.e.path"
+                   draggable="true" (dragstart)="dragStart($event, row.e)" (mousedown)="itemDown($event, row.e)" (click)="itemClick($event, row.e)" (dblclick)="open(row.e)" (contextmenu)="itemContext($event, row.e)"
+                   (dragover)="row.e.dir ? dragOver($event, row.e.path) : null" (dragleave)="dragLeave($event)" (drop)="row.e.dir ? drop($event, row.e.path) : null">
+                <span class="cell cell--name">
+                  <app-file-icon [entry]="row.e" [special]="special(row.e)" [px]="18"></app-file-icon>
+                  @if (tab().renaming() === row.e.path) {
+                    <input class="rename-input" [value]="name(row.e)" (keydown)="renameKey($event, row.e)" (blur)="commitRename(row.e, $any($event.target).value)" (mousedown)="$event.stopPropagation()" (dblclick)="$event.stopPropagation()" spellcheck="false">
+                  } @else {
+                    <span class="cell-text" [title]="row.e.name">{{ name(row.e) }}</span>
+                  }
+                </span>
+                @if (searching()) { <span class="cell cell--muted" [title]="parentName(row.e)">{{ parentName(row.e) }}</span> }
+                <span class="cell cell--muted">{{ date(row.e.mtime) }}</span>
+                <span class="cell cell--muted">{{ typeLabel(row.e) }}</span>
+                <span class="cell cell--muted cell--num">{{ row.e.dir ? '' : size(row.e.size) }}</span>
+              </div>
+            }
+          </div>
+        }
+        @if (marquee(); as m) { <div class="marquee" [style.left.px]="m.x" [style.top.px]="m.y" [style.width.px]="m.w" [style.height.px]="m.h"></div> }
+      </div>
+    }
+  </section>
+
+  @if (s().preview) {
+    <aside class="preview">
+      @if (single(); as e) {
+        <div class="preview-visual" [class.preview-visual--text]="!canThumb(e) && preview()?.kind === 'text'">
+          @if (canThumb(e)) {
+            <app-file-icon [entry]="e" [px]="200" [thumbs]="true" class="preview-thumb"></app-file-icon>
+          } @else if (preview()?.kind === 'text') {
+            <pre class="preview-text">{{ preview()!.text }}</pre>
+          } @else {
+            <app-file-icon [entry]="e" [special]="special(e)" [px]="96" class="preview-icon"></app-file-icon>
+          }
+        </div>
+        <h3 class="preview-name">{{ e.name }}</h3>
+        <dl class="preview-meta">
+          <dt>{{ 'col.type' | t }}</dt><dd>{{ typeLabel(e) }}</dd>
+          @if (!e.dir) { <dt>{{ 'col.size' | t }}</dt><dd>{{ size(e.size) }}</dd> }
+          <dt>{{ 'col.modified' | t }}</dt><dd>{{ date(e.mtime) }}</dd>
+          <dt>{{ 'props.created' | t }}</dt><dd>{{ date(e.ctime) }}</dd>
+        </dl>
+      } @else {
+        <div class="preview-empty">
+          <app-icon name="panel"></app-icon>
+          <p>{{ (selectedEntries().length > 1 ? 'preview.many' : 'preview.none') | t: { n: selectedEntries().length } }}</p>
+        </div>
+      }
+    </aside>
+  }
+</div>
+
+<footer class="status">
+  <span>{{ (tab().isPc() ? 'status.drives' : 'status.items') | t: { n: tab().isPc() ? usedDrives().length : visible().length } }}</span>
+  @if (selectedEntries().length) {
+    <span class="status-sep"></span>
+    <span>{{ 'status.selected' | t: { n: selectedEntries().length } }}@if (selectedSize()) { · {{ size(selectedSize()) }} }</span>
+  }
+  @if (state.clip(); as c) {
+    <span class="status-sep"></span>
+    <span class="status-clip"><app-icon [name]="c.mode === 'move' ? 'cut' : 'copy'"></app-icon>{{ (c.mode === 'move' ? 'status.cut' : 'status.copied') | t: { n: c.paths.length } }}</span>
+  }
+  <span class="status-fill"></span>
+  <button class="status-btn" [class.status-btn--on]="!grid()" (click)="setView('details')" [title]="'view.details' | t" [attr.aria-label]="'view.details' | t"><app-icon name="list"></app-icon></button>
+  <button class="status-btn" [class.status-btn--on]="grid()" (click)="setView('grid')" [title]="'view.medium' | t" [attr.aria-label]="'view.medium' | t"><app-icon name="grid"></app-icon></button>
+</footer>
+
+@if (menu(); as m) {
+  <div class="overlay overlay--clear" (mousedown)="menu.set(null)" (contextmenu)="$event.preventDefault(); menu.set(null)"></div>
+  <div class="menu menu--floating ctx" role="menu" [style.left.px]="m.x" [style.top.px]="m.y">
+    @for (item of m.items; track $index) {
+      @if (item.sep) { <div class="menu-sep"></div> }
+      @else {
+        <button class="menu-item" role="menuitem" [disabled]="item.disabled" [class.menu-item--danger]="item.danger" (click)="runMenu(item)">
+          @if (item.checked !== undefined && !item.icon) { <span class="menu-check">@if (item.checked) { <app-icon name="check"></app-icon> }</span> }
+          @else if (item.icon) { <app-icon class="menu-icon" [name]="item.icon"></app-icon> }
+          @else { <span></span> }
+          <span class="menu-label">{{ item.label }}</span>
+          @if (item.checked && item.icon) { <app-icon class="menu-tick" name="check"></app-icon> }
+        </button>
+      }
+    }
+  </div>
+}
+
+@if (dialog(); as d) {
+  <div class="overlay" (mousedown)="closeDialog()">
+    @switch (d.kind) {
+      @case ('delete') {
+        <div class="dialog" role="alertdialog" [attr.aria-label]="'del.title' | t" (mousedown)="$event.stopPropagation()">
+          <h2 class="dialog-title">{{ (d.permanent ? 'del.titlePermanent' : 'del.title') | t }}</h2>
+          <p class="dialog-text">{{ (d.paths.length === 1 ? (d.permanent ? 'del.onePermanent' : 'del.one') : (d.permanent ? 'del.manyPermanent' : 'del.many')) | t: { n: d.paths.length, name: d.paths[0].slice(d.paths[0].lastIndexOf('\\') + 1) } }}</p>
+          <div class="dialog-actions">
+            <button class="btn" (click)="closeDialog()">{{ 'common.cancel' | t }}</button>
+            <button class="btn" [class.btn--danger]="d.permanent" [class.btn--primary]="!d.permanent" (click)="doDelete(d.paths, d.permanent)" autofocus>{{ 'menu.delete' | t }}</button>
+          </div>
+        </div>
+      }
+      @case ('conflict') {
+        <div class="dialog" role="alertdialog" [attr.aria-label]="'conflict.title' | t" (mousedown)="$event.stopPropagation()">
+          <h2 class="dialog-title">{{ 'conflict.title' | t }}</h2>
+          <p class="dialog-text">{{ (d.names.length === 1 ? 'conflict.one' : 'conflict.many') | t: { n: d.names.length, name: d.names[0] } }}</p>
+          <div class="conflict-actions">
+            <button class="btn btn--primary" (click)="d.resolve('replace')" autofocus><app-icon name="check"></app-icon>{{ 'conflict.replace' | t }}</button>
+            <button class="btn" (click)="d.resolve('keep')"><app-icon name="copy"></app-icon>{{ 'conflict.keep' | t }}</button>
+            <button class="btn" (click)="d.resolve('skip')"><app-icon name="forward"></app-icon>{{ 'conflict.skip' | t }}</button>
+            <button class="btn btn--ghost" (click)="closeDialog()">{{ 'common.cancel' | t }}</button>
+          </div>
+        </div>
+      }
+      @case ('props') {
+        <div class="dialog dialog--props" role="dialog" [attr.aria-label]="'menu.properties' | t" (mousedown)="$event.stopPropagation()">
+          <div class="props-head">
+            @if (d.entry) { <app-file-icon [entry]="d.entry" [special]="special(d.entry)" [px]="48"></app-file-icon> }
+            @else if (d.path.length <= 3) { <app-file-icon special="drive:fixed" [px]="48"></app-file-icon> }
+            @else { <app-file-icon [special]="state.specialOf(d.path)" [px]="48"></app-file-icon> }
+            <h2 class="dialog-title props-name">{{ d.props?.name || d.path }}</h2>
+          </div>
+          <dl class="props">
+            <dt>{{ 'col.type' | t }}</dt><dd>{{ propsKind(d) }}</dd>
+            <dt>{{ 'props.location' | t }}</dt><dd class="props-path">{{ d.path }}</dd>
+            @if (d.props?.target) { <dt>{{ 'props.target' | t }}</dt><dd class="props-path">{{ d.props!.target }}</dd> }
+            <dt>{{ 'col.size' | t }}</dt>
+            <dd>@if (d.props) { {{ size(d.props.size) }} <span class="props-bytes">({{ 'props.bytes' | t: { n: d.props.size.toLocaleString() } }})</span> } @if (!d.props?.done) { <span class="spinner props-spin"></span> }</dd>
+            @if (d.props?.dir) { <dt>{{ 'props.contains' | t }}</dt><dd>{{ 'props.containsValue' | t: { files: d.props!.files.toLocaleString(), folders: d.props!.folders.toLocaleString() } }}</dd> }
+            @if (d.props) {
+              <dt>{{ 'props.created' | t }}</dt><dd>{{ longDate(d.props.created) }}</dd>
+              <dt>{{ 'col.modified' | t }}</dt><dd>{{ longDate(d.props.modified) }}</dd>
+              <dt>{{ 'props.accessed' | t }}</dt><dd>{{ longDate(d.props.accessed) }}</dd>
+            }
+          </dl>
+          @if (d.props && !d.props.dir) {
+            <div class="props-attrs">
+              <label class="props-attr"><input type="checkbox" class="switch" [checked]="d.props.readonly" (change)="toggleReadonly(d.props)">{{ 'props.readonly' | t }}</label>
+              @if (d.props.hidden) { <span class="props-tag">{{ 'props.hidden' | t }}</span> }
+            </div>
+          }
+          <div class="dialog-actions">
+            <button class="btn" (click)="bridgeExplorer(d.path)"><app-icon name="explorer"></app-icon>{{ 'menu.showInExplorer' | t }}</button>
+            <button class="btn btn--primary" (click)="closeDialog()" autofocus>{{ 'common.close' | t }}</button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+}
