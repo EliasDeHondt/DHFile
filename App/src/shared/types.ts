@@ -79,6 +79,8 @@ export interface TransferResult { ok: boolean; conflicts?: string[]; created: st
 
 export interface OpResult { ok: boolean; path?: string; error?: string; }
 
+export interface OpenWithApp { id: string; label: string; icon: string; img: string; isDefault: boolean; }
+
 export interface Properties {
   path: string;
   name: string;

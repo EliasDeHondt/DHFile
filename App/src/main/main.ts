@@ -8,6 +8,7 @@ import { getSettings, saveSettings, settingsPath, watchSettings } from './settin
 import * as fsx from './fsops';
 import * as sys from './system';
 import { shellIcon, stopIcons, warmIcons } from './native-icons';
+import { openWithApp, openWithApps, shellDrag, stopShell, warmShell } from './shell-host';
 import { extOf, normalizePath } from '../shared/files';
 import { AppInfo, Settings, TransferRequest } from '../shared/types';
 
@@ -214,9 +215,19 @@ function registerIpc() {
   ipcMain.handle('clip:read-files', () => isUnlocked() ? sys.readFilesFromClipboard() : []);
   ipcMain.on('clip:write-files', (_e, paths: string[]) => { if (isUnlocked()) sys.writeFilesToClipboard(strs(paths)); });
   ipcMain.on('clip:write-text', (_e, text: string) => clipboard.writeText(str(text)));
-  ipcMain.on('drag:start', (e, paths: string[]) => {
+  ipcMain.handle('shell:apps', (_e, path: string, size: number) => isUnlocked() ? openWithApps(str(path), extOf(str(path)), Math.min(64, Math.max(16, Number(size) || 32))) : []);
+  ipcMain.handle('shell:open-app', async (_e, path: string, id: string) => {
+    if (!isUnlocked()) return LOCKED;
+    if (await openWithApp(str(path), str(id))) return { ok: true };
+    sys.openWith(str(path));
+    return { ok: false, error: 'invoke' };
+  });
+  ipcMain.on('drag:start', async (e, paths: string[]) => {
     const files = strs(paths);
     if (!files.length || !isUnlocked()) return;
+    const win = winOf(e), started = Date.now();
+    if (win && process.platform === 'win32' && await shellDrag(win.getNativeWindowHandle(), files)) return;
+    if (Date.now() - started > 400 || e.sender.isDestroyed()) return;
     dragIcon ??= nativeImage.createFromPath(ICON).resize({ width: 32, height: 32 });
     try { e.sender.startDrag({ file: files[0], files, icon: dragIcon }); } catch {}
   });
@@ -265,7 +276,8 @@ else {
     sys.drives().catch(() => {});
     createWindow(parseArgs(process.argv, process.cwd()));
     setTimeout(warmIcons, 800);
+    setTimeout(warmShell, 1500);
   });
   app.on('window-all-closed', () => app.quit());
-  app.on('will-quit', () => stopIcons());
+  app.on('will-quit', () => { stopIcons(); stopShell(); });
 }

@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, NgZone, computed, effect, inject, input, signal, untracked, viewChild } from '@angular/core';
 import { baseName, crumbs, displayName, formatSize, hasThumbnail, invalidName, isInside, isTextFile, kindOf, naturalCompare, parentOf, PC, samePath, sortEntries, stem } from '../../shared/files';
-import { Conflict, Drive, Entry, Preview, Properties, SIDE_SECTIONS, SideSection, SortKey } from '../../shared/types';
-import { bridge, thumbUrl } from './bridge';
+import { Conflict, Drive, Entry, OpenWithApp, Preview, Properties, SIDE_SECTIONS, SideSection, SortKey } from '../../shared/types';
+import { bridge, iconSize, nativeIconUrl, thumbUrl } from './bridge';
 import { language, t, TextKey, TPipe } from './i18n';
 import { FileIconComponent, IconComponent } from './icon.component';
 import { Clip, StateService } from './state.service';
 import { FolderTab } from './tab';
 
-export interface MenuItem { label?: string; icon?: string; run?: () => void; disabled?: boolean; sep?: boolean; checked?: boolean; danger?: boolean; }
+export interface MenuItem { label?: string; icon?: string; img?: string; note?: string; run?: () => void; sub?: () => MenuItem[]; disabled?: boolean; sep?: boolean; checked?: boolean; danger?: boolean; }
 type Dialog =
   | { kind: 'delete'; paths: string[]; permanent: boolean }
   | { kind: 'conflict'; names: string[]; resolve: (c: Conflict | null) => void }
@@ -44,6 +44,17 @@ export class ExplorerComponent {
   viewW = signal(800);
   editingAddress = signal(false);
   menu = signal<{ x: number; y: number; items: MenuItem[] } | null>(null);
+  sub = signal<{ index: number; x: number; y: number; left: number } | null>(null);
+  apps = signal<{ path: string; list: OpenWithApp[] | null } | null>(null);
+  subItems = computed(() => { const m = this.menu(), s = this.sub(); return m && s ? m.items[s.index]?.sub?.() ?? [] : []; });
+  subPos = computed(() => {
+    const s = this.sub();
+    if (!s) return null;
+    const height = this.subItems().reduce((h, i) => h + (i.sep ? 9 : 34), 12);
+    const x = s.x + 270 > window.innerWidth ? Math.max(4, s.left - 266) : s.x;
+    return { x, y: Math.max(4, Math.min(s.y, window.innerHeight - height - 8)) };
+  });
+  private subTimer: any = null;
   dialog = signal<Dialog | null>(null);
   dropTarget = signal<string | null>(null);
   marquee = signal<{ x: number; y: number; w: number; h: number } | null>(null);
@@ -86,6 +97,7 @@ export class ExplorerComponent {
   usedDrives = computed(() => this.state.drives());
 
   constructor() {
+    effect(() => { this.menu(); untracked(() => { clearTimeout(this.subTimer); this.sub.set(null); }); });
     const destroy = inject(DestroyRef);
     effect(() => { this.tab().path(); untracked(() => { this.editingAddress.set(false); this.searchText.set(this.tab().query()); const vp = this.viewport()?.nativeElement; if (vp) vp.scrollTop = 0; this.scrollTop.set(0); }); });
     effect(() => {
@@ -588,7 +600,7 @@ export class ExplorerComponent {
       const one = list.length === 1 ? list[0] : null;
       items.push({ label: t('menu.open'), icon: 'external', run: () => this.openSelection() });
       if (one?.dir) items.push({ label: t('menu.openTab'), icon: 'plus', run: () => this.state.newTab(one.path, false) }, { label: t('menu.openWindow'), icon: 'window', run: () => bridge.newWindow(one.path) });
-      if (one && !one.dir) items.push({ label: t('menu.openWith'), icon: 'openWith', run: () => bridge.openWith(one.path) });
+      if (one && !one.dir) { this.loadApps(one); items.push({ label: t('menu.openWith'), icon: 'openWith', sub: () => this.openWithItems(one) }); }
       if (this.searching() && one) items.push({ label: t('menu.openLocation'), icon: 'folder', run: () => this.tab().go(one.parent ?? parentOf(one.path) ?? PC, { select: one.path }) });
       items.push({ sep: true },
         { label: t('menu.cut'), icon: 'cut', run: () => this.copy('move') },
@@ -629,7 +641,44 @@ export class ExplorerComponent {
     const height = items.reduce((h, i) => h + (i.sep ? 9 : 34), 12);
     this.menu.set({ x: Math.max(4, Math.min(x, window.innerWidth - 260)), y: Math.max(4, Math.min(y, window.innerHeight - height - 8)), items });
   }
-  runMenu(item: MenuItem) { if (item.disabled) return; this.menu.set(null); item.run?.(); }
+  runMenu(item: MenuItem, ev?: Event, index = -1) {
+    if (item.disabled) return;
+    if (item.sub) { if (ev) this.openSub(ev, index); return; }
+    this.menu.set(null);
+    item.run?.();
+  }
+  hoverMenu(ev: Event, item: MenuItem, index: number) {
+    clearTimeout(this.subTimer);
+    if (item.sub && !item.disabled) this.openSub(ev, index);
+    else if (this.sub()) this.subTimer = setTimeout(() => this.sub.set(null), 250);
+  }
+  keepSub() { clearTimeout(this.subTimer); }
+  private openSub(ev: Event, index: number) {
+    const button = ev.currentTarget as HTMLElement, menu = button.closest('.menu') as HTMLElement;
+    const r = button.getBoundingClientRect(), m = menu.getBoundingClientRect();
+    if (this.sub()?.index !== index) this.sub.set({ index, x: m.right - 4, y: r.top - 6, left: m.left });
+  }
+  private loadApps(e: Entry) {
+    if (this.apps()?.path === e.path && this.apps()!.list) return;
+    this.apps.set({ path: e.path, list: null });
+    bridge.openWithApps(e.path, iconSize(18)).then(list => { if (this.apps()?.path === e.path) this.apps.set({ path: e.path, list }); }, () => this.apps.set({ path: e.path, list: [] }));
+  }
+  private openWithItems(e: Entry): MenuItem[] {
+    const state = this.apps();
+    const list = state?.path === e.path ? state.list : null;
+    const items: MenuItem[] = [];
+    if (!list) items.push({ label: t('menu.loadingApps'), icon: 'refresh', disabled: true });
+    else for (const app of list) items.push({
+      label: app.label,
+      img: app.img ? `data:image/png;base64,${app.img}` : app.icon ? nativeIconUrl(app.icon, 18) : undefined,
+      icon: app.img || app.icon ? undefined : 'openWith',
+      note: app.isDefault ? t('menu.default') : undefined,
+      run: () => bridge.openWithApp(e.path, app.id),
+    });
+    if (list?.length) items.push({ sep: true });
+    items.push({ label: t('menu.chooseApp'), icon: 'openWith', run: () => bridge.openWith(e.path) });
+    return items;
+  }
   placeContext(ev: MouseEvent, path: string, pinned: boolean) {
     ev.preventDefault();
     const items: MenuItem[] = [

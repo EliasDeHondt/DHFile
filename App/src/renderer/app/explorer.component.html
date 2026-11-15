@@ -280,16 +280,35 @@
     @for (item of m.items; track $index) {
       @if (item.sep) { <div class="menu-sep"></div> }
       @else {
-        <button class="menu-item" role="menuitem" [disabled]="item.disabled" [class.menu-item--danger]="item.danger" (click)="runMenu(item)">
+        <button class="menu-item" role="menuitem" [disabled]="item.disabled" [class.menu-item--danger]="item.danger" [class.menu-item--open]="item.sub && sub()?.index === $index"
+                [attr.aria-haspopup]="item.sub ? 'menu' : null" [attr.aria-expanded]="item.sub ? sub()?.index === $index : null"
+                (click)="runMenu(item, $event, $index)" (mouseenter)="hoverMenu($event, item, $index)" (focus)="hoverMenu($event, item, $index)" (keydown.arrowright)="item.sub && runMenu(item, $event, $index)">
           @if (item.checked !== undefined && !item.icon) { <span class="menu-check">@if (item.checked) { <app-icon name="check"></app-icon> }</span> }
           @else if (item.icon) { <app-icon class="menu-icon" [name]="item.icon"></app-icon> }
           @else { <span></span> }
           <span class="menu-label">{{ item.label }}</span>
-          @if (item.checked && item.icon) { <app-icon class="menu-tick" name="check"></app-icon> }
+          @if (item.sub) { <app-icon class="menu-arrow" name="chevronRight"></app-icon> }
+          @else if (item.checked && item.icon) { <app-icon class="menu-tick" name="check"></app-icon> }
         </button>
       }
     }
   </div>
+  @if (subPos(); as p) {
+    <div class="menu menu--floating menu--sub ctx" role="menu" [style.left.px]="p.x" [style.top.px]="p.y" (mouseenter)="keepSub()">
+      @for (item of subItems(); track $index) {
+        @if (item.sep) { <div class="menu-sep"></div> }
+        @else {
+          <button class="menu-item" role="menuitem" [disabled]="item.disabled" (click)="runMenu(item)">
+            @if (item.img) { <img class="menu-img" [src]="item.img" alt="" draggable="false"> }
+            @else if (item.icon) { <app-icon class="menu-icon" [name]="item.icon"></app-icon> }
+            @else { <span></span> }
+            <span class="menu-label">{{ item.label }}</span>
+            @if (item.note) { <span class="menu-note">{{ item.note }}</span> }
+          </button>
+        }
+      }
+    </div>
+  }
 }
 
 @if (dialog(); as d) {

@@ -1,7 +1,4 @@
-import { ChildProcess, spawn } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { b64, PsHost } from './ps-host';
 
 const SCRIPT = String.raw`
 $ErrorActionPreference = 'Stop'
@@ -88,59 +85,13 @@ while ($true) {
 }
 `;
 
-let child: ChildProcess | null = null;
-let starting: Promise<boolean> | null = null;
-let failures = 0;
-let seq = 1;
-let buffer = '';
-const pending = new Map<number, (answer: string | null) => void>();
+const host = new PsHost('dhfile-icons-v1.ps1', SCRIPT);
 
-function finishAll() { for (const done of pending.values()) done(null); pending.clear(); }
-
-function start(): Promise<boolean> {
-  if (process.platform !== 'win32' || failures >= 3) return Promise.resolve(false);
-  if (starting) return starting;
-  starting = new Promise<boolean>(resolve => {
-    try {
-      const file = join(tmpdir(), 'dhfile-icons-v1.ps1');
-      writeFileSync(file, SCRIPT, 'utf8');
-      const p = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-STA', '-File', file], { windowsHide: true, stdio: ['pipe', 'pipe', 'ignore'] });
-      child = p;
-      let isReady = false;
-      const giveUp = setTimeout(() => { if (!isReady) { failures++; p.kill(); resolve(false); } }, 20000);
-      p.stdout!.setEncoding('ascii');
-      p.stdout!.on('data', (chunk: string) => {
-        buffer += chunk;
-        let nl: number;
-        while ((nl = buffer.indexOf('\n')) >= 0) {
-          const line = buffer.slice(0, nl).replace(/\r$/, '');
-          buffer = buffer.slice(nl + 1);
-          if (!isReady) { if (line === 'ready') { isReady = true; clearTimeout(giveUp); resolve(true); } continue; }
-          const tab = line.indexOf('\t');
-          const id = Number(line.slice(0, tab));
-          const done = pending.get(id);
-          if (done) { pending.delete(id); done(line.slice(tab + 1)); }
-        }
-      });
-      p.on('error', () => { failures++; clearTimeout(giveUp); resolve(false); });
-      p.on('exit', () => { child = null; starting = null; buffer = ''; finishAll(); if (!isReady) { failures++; clearTimeout(giveUp); resolve(false); } });
-      p.stdin!.on('error', () => {});
-    } catch { failures++; resolve(false); }
-  });
-  return starting;
-}
-
-export function warmIcons() { start(); }
-export function stopIcons() { child?.kill(); child = null; }
+export function warmIcons() { host.start(); }
+export function stopIcons() { host.stop(); }
 
 export async function shellIcon(path: string, size: number, byExtension: boolean): Promise<Buffer | 'generic' | null> {
-  if (!(await start()) || !child?.stdin) return null;
-  const id = seq++;
-  const answer = await new Promise<string | null>(resolve => {
-    const timer = setTimeout(() => { pending.delete(id); resolve(null); }, 8000);
-    pending.set(id, a => { clearTimeout(timer); resolve(a); });
-    child!.stdin!.write(`${id}\t${size}\t${byExtension ? 1 : 0}\t${Buffer.from(path, 'utf8').toString('base64')}\n`);
-  });
+  const answer = await host.ask([String(size), byExtension ? '1' : '0', b64(path)]);
   if (!answer) return null;
   if (answer === 'generic') return 'generic';
   return Buffer.from(answer, 'base64');

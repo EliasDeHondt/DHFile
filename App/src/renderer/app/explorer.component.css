@@ -169,6 +169,10 @@
 .menu-check { display: inline-flex; width: 20px; color: var(--accent-ink); }
 .menu-check .ui-icon { --icon-size: 15px; }
 .menu-tick { --icon-size: 14px; color: var(--accent-ink); }
+.menu-arrow { --icon-size: 14px; color: var(--muted); }
+.menu--sub { min-width: 240px; max-width: 340px; animation-duration: 0.08s; }
+.menu-img { width: 18px; height: 18px; margin: 0 1px; object-fit: contain; }
+.menu-note { padding: 2px 7px; border-radius: 6px; background: var(--tint); color: var(--accent-ink); font-size: 11px; font-weight: 600; }
 .conflict-actions { display: flex; flex-direction: column; align-items: stretch; gap: 8px; margin-top: 8px; }
 .conflict-actions .btn { justify-content: flex-start; height: 40px; }
 .dialog--props { max-width: 520px; }

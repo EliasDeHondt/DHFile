@@ -1,4 +1,4 @@
-import { AppInfo, Drive, Entry, Listing, LockStatus, OpResult, Preview, Properties, Settings, TransferRequest, TransferResult, UnlockResult } from '../../shared/types';
+import { AppInfo, Drive, Entry, Listing, LockStatus, OpenWithApp, OpResult, Preview, Properties, Settings, TransferRequest, TransferResult, UnlockResult } from '../../shared/types';
 
 interface Api {
   invoke(channel: string, ...args: unknown[]): Promise<any>;
@@ -37,6 +37,8 @@ export const bridge = {
   open: (path: string): Promise<OpResult> => api.invoke('shell:open', path),
   shortcutTarget: (path: string): Promise<string | null> => api.invoke('shell:shortcut', path),
   openWith: (path: string) => api.send('shell:open-with', path),
+  openWithApps: (path: string, size: number): Promise<OpenWithApp[]> => api.invoke('shell:apps', path, size),
+  openWithApp: (path: string, id: string): Promise<OpResult> => api.invoke('shell:open-app', path, id),
   openTerminal: (path: string) => api.send('shell:terminal', path),
   openVsCode: (path: string) => api.send('shell:vscode', path),
   showInExplorer: (path: string, select: boolean) => api.send('shell:explorer', path, select),

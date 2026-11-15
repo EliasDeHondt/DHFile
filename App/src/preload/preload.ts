@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent, webUtils } from 'electron';
 
-const INVOKE = ['app:info', 'settings:get', 'settings:set', 'settings:open-file', 'fs:list', 'fs:peek', 'fs:drives', 'fs:network', 'fs:resolve', 'fs:mkdir', 'fs:newfile', 'fs:rename', 'fs:trash', 'fs:delete', 'fs:transfer', 'fs:props', 'fs:readonly', 'fs:preview', 'shell:open', 'shell:shortcut', 'clip:read-files', 'sys:default-app', 'sys:default-app-status', 'folder:pick', 'lock:status', 'lock:setup', 'lock:unlock', 'lock:verify', 'lock:change'];
+const INVOKE = ['app:info', 'settings:get', 'settings:set', 'settings:open-file', 'fs:list', 'fs:peek', 'fs:drives', 'fs:network', 'fs:resolve', 'fs:mkdir', 'fs:newfile', 'fs:rename', 'fs:trash', 'fs:delete', 'fs:transfer', 'fs:props', 'fs:readonly', 'fs:preview', 'shell:open', 'shell:shortcut', 'shell:apps', 'shell:open-app', 'clip:read-files', 'sys:default-app', 'sys:default-app-status', 'folder:pick', 'lock:status', 'lock:setup', 'lock:unlock', 'lock:verify', 'lock:change'];
 const SEND = ['fs:watch', 'fs:search', 'fs:search-cancel', 'props:cancel', 'shell:open-with', 'shell:terminal', 'shell:vscode', 'shell:explorer', 'shell:recycle', 'clip:write-files', 'clip:write-text', 'drag:start', 'link:open', 'window:new', 'window:close', 'window:chrome', 'lock:lock', 'lock:activity'];
 const EVENTS = ['fs:changed', 'search:results', 'props:update', 'settings:changed', 'theme:system', 'window:fullscreen', 'lock:changed'];
 
