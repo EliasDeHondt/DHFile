@@ -1,3 +1,9 @@
+/**
+    * @author Group DH Team
+    * @see https://group-dh.com
+    * @since 16/11/2026
+**/
+
 import { Entry, SortKey } from './types';
 
 export const PC = 'pc:';

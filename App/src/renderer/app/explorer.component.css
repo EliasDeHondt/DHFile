@@ -1,3 +1,9 @@
+/**
+    * @author Group DH Team
+    * @see https://group-dh.com
+    * @since 16/11/2026
+**/
+
 :host { display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; background: var(--page); color: var(--text); --cols: minmax(220px, 1fr) 156px 168px 96px; }
 :host .main--search { --cols: minmax(160px, 1fr) minmax(110px, 0.8fr) 140px 130px 80px; }
 

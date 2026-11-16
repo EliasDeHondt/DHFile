@@ -1,3 +1,9 @@
+/**
+    * @author Group DH Team
+    * @see https://group-dh.com
+    * @since 16/11/2026
+**/
+
 import { app, BrowserWindow, clipboard, dialog, ipcMain, nativeImage, nativeTheme, net, protocol, shell } from 'electron';
 import { existsSync, statSync } from 'node:fs';
 import { release, userInfo } from 'node:os';

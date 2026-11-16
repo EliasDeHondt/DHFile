@@ -1,3 +1,9 @@
+/**
+    * @author Group DH Team
+    * @see https://group-dh.com
+    * @since 16/11/2026
+**/
+
 import { AppInfo, Drive, Entry, Listing, LockStatus, OpenWithApp, OpResult, Preview, Properties, Settings, TransferRequest, TransferResult, UnlockResult } from '../../shared/types';
 
 interface Api {

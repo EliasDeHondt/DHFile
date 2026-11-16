@@ -1,3 +1,9 @@
+/**
+    * @author Group DH Team
+    * @see https://group-dh.com
+    * @since 16/11/2026
+**/
+
 :root, :root[data-theme="dark"] {
   color-scheme: dark;
   --brand: #4f94f0; --brand-2: #829ec2;
@@ -126,4 +132,3 @@ button:disabled, button:disabled *, input:disabled, select:disabled { cursor: va
 .dialog-text--muted { color: var(--muted); }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; align-self: stretch; }
 .dialog--about .dialog-actions { justify-content: center; }
-

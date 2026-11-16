@@ -1,3 +1,9 @@
+/**
+    * @author Group DH Team
+    * @see https://group-dh.com
+    * @since 16/11/2026
+**/
+
 import { ChangeDetectionStrategy, Component, HostListener, NgZone, effect, inject, signal, untracked } from '@angular/core';
 import { bridge } from './bridge';
 import { enableCustomSelects } from './custom-select';

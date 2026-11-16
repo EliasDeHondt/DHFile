@@ -1,3 +1,9 @@
+/**
+    * @author Group DH Team
+    * @see https://group-dh.com
+    * @since 16/11/2026
+**/
+
 import { signal, computed } from '@angular/core';
 import { baseName, normalizePath, parentOf, PC, samePath } from '../../shared/files';
 import { Entry } from '../../shared/types';

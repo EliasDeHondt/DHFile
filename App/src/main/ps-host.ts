@@ -1,3 +1,9 @@
+/**
+    * @author Group DH Team
+    * @see https://group-dh.com
+    * @since 16/11/2026
+**/
+
 import { ChildProcess, spawn } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';

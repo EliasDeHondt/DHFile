@@ -1,3 +1,9 @@
+/**
+    * @author Group DH Team
+    * @see https://group-dh.com
+    * @since 16/11/2026
+**/
+
 const test = require('node:test');
 const assert = require('node:assert');
 const { uniqueName, invalidName, normalizePath, parentOf, baseName, joinPath, isInside, crumbs, matcher, formatSize, sortEntries, kindOf, extOf, displayName, PC } = require('../dist/main/shared/files.js');

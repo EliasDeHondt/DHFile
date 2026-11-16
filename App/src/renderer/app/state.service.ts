@@ -1,3 +1,9 @@
+/**
+    * @author Group DH Team
+    * @see https://group-dh.com
+    * @since 16/11/2026
+**/
+
 import { Injectable, NgZone, computed, inject, signal } from '@angular/core';
 import { isInside, normalizePath, PC, samePath } from '../../shared/files';
 import { AppInfo, DEFAULT_SETTINGS, Drive, Entry, Settings } from '../../shared/types';

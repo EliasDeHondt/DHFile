@@ -1,3 +1,9 @@
+/**
+    * @author Group DH Team
+    * @see https://group-dh.com
+    * @since 16/11/2026
+**/
+
 import { execFile } from 'node:child_process';
 import { constants, Dirent, FSWatcher, watch } from 'node:fs';
 import { chmod, cp, lstat, mkdir, readdir, readFile, rename, rm, stat, writeFile, open } from 'node:fs/promises';

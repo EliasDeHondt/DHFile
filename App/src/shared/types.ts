@@ -1,3 +1,9 @@
+/**
+    * @author Group DH Team
+    * @see https://group-dh.com
+    * @since 16/11/2026
+**/
+
 export type AppTheme = 'system' | 'dark' | 'light';
 export type Language = 'nl' | 'en';
 export type ViewMode = 'details' | 'grid';

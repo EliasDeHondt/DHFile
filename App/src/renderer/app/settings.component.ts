@@ -1,3 +1,9 @@
+/**
+    * @author Group DH Team
+    * @see https://group-dh.com
+    * @since 16/11/2026
+**/
+
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Settings, SIDE_SECTIONS, SideSection } from '../../shared/types';
 import { bridge } from './bridge';

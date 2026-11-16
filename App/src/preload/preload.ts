@@ -1,3 +1,9 @@
+/**
+    * @author Group DH Team
+    * @see https://group-dh.com
+    * @since 16/11/2026
+**/
+
 import { contextBridge, ipcRenderer, IpcRendererEvent, webUtils } from 'electron';
 
 const INVOKE = ['app:info', 'settings:get', 'settings:set', 'settings:open-file', 'fs:list', 'fs:peek', 'fs:drives', 'fs:network', 'fs:resolve', 'fs:mkdir', 'fs:newfile', 'fs:rename', 'fs:trash', 'fs:delete', 'fs:transfer', 'fs:props', 'fs:readonly', 'fs:preview', 'shell:open', 'shell:shortcut', 'shell:apps', 'shell:open-app', 'clip:read-files', 'sys:default-app', 'sys:default-app-status', 'folder:pick', 'lock:status', 'lock:setup', 'lock:unlock', 'lock:verify', 'lock:change'];

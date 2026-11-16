@@ -1,3 +1,9 @@
+/**
+    * @author Group DH Team
+    * @see https://group-dh.com
+    * @since 16/11/2026
+**/
+
 import { app, shell } from 'electron';
 import { execFile, spawn } from 'node:child_process';
 import { existsSync, readdirSync, statfsSync } from 'node:fs';

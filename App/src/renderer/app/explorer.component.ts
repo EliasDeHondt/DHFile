@@ -1,3 +1,9 @@
+/**
+    * @author Group DH Team
+    * @see https://group-dh.com
+    * @since 16/11/2026
+**/
+
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, NgZone, computed, effect, inject, input, signal, untracked, viewChild } from '@angular/core';
 import { baseName, crumbs, displayName, formatSize, hasThumbnail, invalidName, isInside, isTextFile, kindOf, naturalCompare, parentOf, PC, samePath, sortEntries, stem } from '../../shared/files';
 import { Conflict, Drive, Entry, OpenWithApp, Preview, Properties, SIDE_SECTIONS, SideSection, SortKey } from '../../shared/types';
