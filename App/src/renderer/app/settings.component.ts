@@ -43,5 +43,5 @@ export class SettingsComponent {
   }
 
   openJson() { bridge.openSettingsFile(); }
-  openSite() { bridge.openLink('https://eliasdh.com'); }
+  openSite() { bridge.openLink('https://group-dh.com'); }
 }

@@ -1,8 +1,8 @@
-############################
-# @author EliasDH Team     #
-# @see https://eliasdh.com #
-# @since 14/11/2026        #
-############################
+#############################
+# @author Group DH Team     #
+# @see https://group-dh.com #
+# @since 14/11/2026         #
+#############################
 name: Release
 
 on:
